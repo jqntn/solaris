@@ -39,7 +39,7 @@ int
 main()
 {
   SetConfigFlags(FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT | FLAG_WINDOW_UNDECORATED);
-  InitWindow(0, 0, "raylibfx");
+  InitWindow(0, 0, "solaris");
 
   uint32_t screen_width = GetScreenWidth();
   uint32_t screen_height = GetScreenHeight();
