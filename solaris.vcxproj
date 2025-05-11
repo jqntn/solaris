@@ -71,7 +71,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ExternalIncludePath>hshaders;hresources;$(ExternalIncludePath)</ExternalIncludePath>
+    <ExternalIncludePath>thirdparty;hshaders;hresources;$(ExternalIncludePath)</ExternalIncludePath>
     <IncludePath>src;$(IncludePath)</IncludePath>
     <raylib_LibraryType>DynamicRelease</raylib_LibraryType>
   </PropertyGroup>
