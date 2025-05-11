@@ -72,12 +72,12 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ExternalIncludePath>hshaders;hresources;$(ExternalIncludePath)</ExternalIncludePath>
-    <IncludePath>include;$(IncludePath)</IncludePath>
+    <IncludePath>src;$(IncludePath)</IncludePath>
     <raylib_LibraryType>DynamicRelease</raylib_LibraryType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ExternalIncludePath>hshaders;hresources;$(ExternalIncludePath)</ExternalIncludePath>
-    <IncludePath>include;$(IncludePath)</IncludePath>
+    <IncludePath>src;$(IncludePath)</IncludePath>
     <raylib_LibraryType>DynamicRelease</raylib_LibraryType>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -210,11 +210,11 @@ exit /b</Command>
     <ClCompile Include="src\resources.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\resources.h" />
-    <ClInclude Include="include\shaders.h" />
+    <None Include="shaders\blur.frag" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\blur.frag" />
+    <ClInclude Include="src\resources.h" />
+    <ClInclude Include="src\shaders.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
