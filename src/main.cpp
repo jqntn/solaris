@@ -1,10 +1,20 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
+#include <memory>
 #include <raylib.h>
 #include <resources.h>
 #include <shaders.h>
 #include <string>
+
+#define RAYGUI_IMPLEMENTATION
+#include <raygui/raygui.h>
+#include <raygui/style_cyber.h>
+
+// ==============
+// === DRIVER ===
+// ==============
 
 extern "C"
 {
@@ -13,13 +23,35 @@ extern "C"
     0x00000001;
 }
 
-namespace fs = std::filesystem;
+// =============
+// === TYPES ===
+// =============
+
+class IScene
+{
+public:
+  virtual ~IScene() {}
+  virtual void tick() = 0;
+  virtual void draw() = 0;
+};
+
+// =============
+// === UTILS ===
+// =============
+
+static void
+DrawFPS()
+{
+  DrawText(TextFormat("%d", GetFPS()), 8, 4, 30, GREEN);
+}
 
 static Model
 LoadModelFromMemory(const char* fileType,
                     const unsigned char* fileData,
                     int dataSize)
 {
+  namespace fs = std::filesystem;
+
   fs::path file_path =
     fs::temp_directory_path() / ("out" + std::string(fileType));
 
@@ -34,57 +66,137 @@ LoadModelFromMemory(const char* fileType,
   return model;
 }
 
-int
-main()
+// ===============
+// === GLOBALS ===
+// ===============
+
+std::unique_ptr<IScene> g_current_scene;
+
+// ==============
+// === SCENES ===
+// ==============
+
+class MainMenu final : public IScene
 {
-  SetConfigFlags(FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT | FLAG_WINDOW_UNDECORATED);
-  InitWindow(0, 0, "solaris");
+private:
+  Texture m_texture;
+  Font m_font;
 
-  uint32_t screen_width = GetScreenWidth();
-  uint32_t screen_height = GetScreenHeight();
+public:
+  ~MainMenu() { UnloadTexture(m_texture); }
+  MainMenu()
+  {
+    GuiLoadStyleCyber();
 
-  Model model = LoadModelFromMemory(".glb", helmet_glb, helmet_glb_len);
+    m_texture = LoadTexture("sresources/graphics/mainmenu.jpg");
+    m_font = LoadFontEx(
+      "sresources/fonts/Orbitron/Orbitron-Regular.ttf", 256, nullptr, 0);
+  }
 
-  Shader shader = LoadShaderFromMemory(
-    NULL,
-    std::string(reinterpret_cast<char*>(blur_frag), blur_frag_len).c_str());
+  void tick() override {}
+  void draw() override
+  {
+    /* STATICS */
 
-  int pass_loc = GetShaderLocation(shader, "pass");
-  int pass = 0;
+    static float bg_scale = (float)GetScreenHeight() / m_texture.height;
+    static Vector2 bg_position =
+      Vector2{ (GetScreenWidth() - m_texture.width * bg_scale) / 2.0f, 0.0f };
 
-  RenderTexture2D target_0 = LoadRenderTexture(screen_width, screen_height);
-  RenderTexture2D target_1 = LoadRenderTexture(screen_width, screen_height);
+    static const char* text = "SOLARIS";
 
-  Vector3 position = Vector3{ 0.0f, 1.0f, 0.0f };
-  Camera camera = {
-    .position = Vector3{ 2.0f, 2.0f, 2.0f },
-    .target = position,
-    .up = Vector3{ 0.0f, 1.0f, 0.0f },
-    .fovy = 50.0f,
-    .projection = CAMERA_PERSPECTIVE,
-  };
+    static float font_size = 256.0f;
+    static float font_spacing = 50.0f;
 
-  while (!WindowShouldClose()) {
-    UpdateCamera(&camera, CAMERA_ORBITAL);
+    static Vector2 text_size =
+      MeasureTextEx(m_font, text, font_size, font_spacing);
+    static Vector2 text_pos =
+      Vector2{ (GetScreenWidth() - text_size.x) / 2.0f, 150.0f };
 
-    BeginTextureMode(target_0);
+    /* */
+
+    BeginDrawing();
+    ClearBackground(BLACK);
+
+    DrawTextureEx(m_texture, bg_position, 0.0f, bg_scale, WHITE);
+    DrawTextEx(m_font, text, text_pos, font_size, font_spacing, WHITE);
+
+    EndDrawing();
+
+    // GuiButton(Rectangle{ 25, 255, 125, 30 }, "QUIT");
+  }
+};
+
+class TestScene0 final : public IScene
+{
+private:
+  Model m_model;
+  Shader m_shader;
+  RenderTexture2D m_target_0;
+  RenderTexture2D m_target_1;
+
+  Camera m_camera;
+  Vector3 m_position;
+
+  int m_pass_loc = 0;
+  int m_pass = 0;
+
+public:
+  ~TestScene0()
+  {
+    UnloadModel(m_model);
+    UnloadShader(m_shader);
+    UnloadRenderTexture(m_target_0);
+    UnloadRenderTexture(m_target_1);
+  }
+  TestScene0()
+  {
+    uint32_t screen_width = GetScreenWidth();
+    uint32_t screen_height = GetScreenHeight();
+
+    m_model = LoadModelFromMemory(".glb", helmet_glb, helmet_glb_len);
+    m_shader = LoadShaderFromMemory(
+      NULL,
+      std::string(reinterpret_cast<char*>(blur_frag), blur_frag_len).c_str());
+
+    m_pass_loc = GetShaderLocation(m_shader, "pass");
+    m_pass = 0;
+
+    m_target_0 = LoadRenderTexture(screen_width, screen_height);
+    m_target_1 = LoadRenderTexture(screen_width, screen_height);
+
+    m_position = Vector3{ 0.0f, 1.0f, 0.0f };
+    m_camera = {
+      .position = Vector3{ 2.0f, 2.0f, 2.0f },
+      .target = m_position,
+      .up = Vector3{ 0.0f, 1.0f, 0.0f },
+      .fovy = 50.0f,
+      .projection = CAMERA_PERSPECTIVE,
+    };
+  }
+
+  void tick() override {}
+  void draw() override
+  {
+    UpdateCamera(&m_camera, CAMERA_ORBITAL);
+
+    BeginTextureMode(m_target_0);
     ClearBackground(RAYWHITE);
-    BeginMode3D(camera);
-    DrawModel(model, position, 1.0f, WHITE);
+    BeginMode3D(m_camera);
+    DrawModel(m_model, m_position, 1.0f, WHITE);
     DrawGrid(10, 1.0f);
     EndMode3D();
     EndTextureMode();
 
-    BeginTextureMode(target_1);
+    BeginTextureMode(m_target_1);
     ClearBackground(RAYWHITE);
-    pass = 0;
-    SetShaderValue(shader, pass_loc, &pass, SHADER_UNIFORM_INT);
-    BeginShaderMode(shader);
-    DrawTextureRec(target_0.texture,
+    m_pass = 0;
+    SetShaderValue(m_shader, m_pass_loc, &m_pass, SHADER_UNIFORM_INT);
+    BeginShaderMode(m_shader);
+    DrawTextureRec(m_target_0.texture,
                    Rectangle{ 0.0f,
                               0.0f,
-                              (float)target_0.texture.width,
-                              (float)-target_0.texture.height },
+                              (float)m_target_0.texture.width,
+                              (float)-m_target_0.texture.height },
                    Vector2{},
                    WHITE);
     EndShaderMode();
@@ -92,25 +204,40 @@ main()
 
     BeginDrawing();
     ClearBackground(RAYWHITE);
-    pass = 1;
-    SetShaderValue(shader, pass_loc, &pass, SHADER_UNIFORM_INT);
-    BeginShaderMode(shader);
-    DrawTextureRec(target_1.texture,
+    m_pass = 1;
+    SetShaderValue(m_shader, m_pass_loc, &m_pass, SHADER_UNIFORM_INT);
+    BeginShaderMode(m_shader);
+    DrawTextureRec(m_target_1.texture,
                    Rectangle{ 0.0f,
                               0.0f,
-                              (float)target_1.texture.width,
-                              (float)-target_1.texture.height },
+                              (float)m_target_1.texture.width,
+                              (float)-m_target_1.texture.height },
                    Vector2{},
                    WHITE);
     EndShaderMode();
-    DrawText(TextFormat("%d", GetFPS()), 8, 4, 30, GREEN);
+    DrawFPS();
     EndDrawing();
   }
+};
 
-  UnloadModel(model);
-  UnloadShader(shader);
-  UnloadRenderTexture(target_0);
-  UnloadRenderTexture(target_1);
+// ==================
+// === ENTRYPOINT ===
+// ==================
+
+int
+main()
+{
+  SetConfigFlags(FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT | FLAG_WINDOW_UNDECORATED);
+  InitWindow(0, 0, "solaris");
+
+  g_current_scene = std::make_unique<MainMenu>();
+
+  while (!WindowShouldClose()) {
+    g_current_scene->tick();
+    g_current_scene->draw();
+  }
+
+  g_current_scene.reset();
 
   CloseWindow();
 }
