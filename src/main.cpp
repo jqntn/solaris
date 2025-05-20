@@ -1,7 +1,6 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
-#include <iosfwd>
 #include <raylib.h>
 #include <resources.h>
 #include <shaders.h>
