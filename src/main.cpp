@@ -35,9 +35,21 @@ public:
   virtual void draw() = 0;
 };
 
+// =================
+// === CONSTANTS ===
+// =================
+
+constexpr uint16_t REF_RES = 1600;
+
 // =============
 // === UTILS ===
 // =============
+
+static float
+GetScalingFactor()
+{
+  return (float)GetScreenHeight() / REF_RES;
+}
 
 static void
 DrawFPS()
@@ -81,6 +93,10 @@ class MainMenu final : public IScene
 private:
   Texture m_texture;
   Font m_font;
+  Music m_music;
+
+  uint32_t m_font_size = 256;
+  uint32_t m_font_spacing = 64;
 
 public:
   ~MainMenu() { UnloadTexture(m_texture); }
@@ -88,12 +104,21 @@ public:
   {
     GuiLoadStyleCyber();
 
+    m_font_size *= GetScalingFactor();
+    m_font_spacing *= GetScalingFactor();
+
     m_texture = LoadTexture("sresources/graphics/mainmenu.jpg");
-    m_font = LoadFontEx(
-      "sresources/fonts/Orbitron/Orbitron-Regular.ttf", 256, nullptr, 0);
+    m_font = LoadFontEx("sresources/fonts/Orbitron/Orbitron-Regular.ttf",
+                        m_font_size,
+                        nullptr,
+                        0);
+    m_music = LoadMusicStream("sresources/sounds/mainmenu.ogg");
+
+    SetMusicVolume(m_music, 0.25f);
+    PlayMusicStream(m_music);
   }
 
-  void tick() override {}
+  void tick() override { UpdateMusicStream(m_music); }
   void draw() override
   {
     /* STATICS */
@@ -102,13 +127,9 @@ public:
     static Vector2 bg_position =
       Vector2{ (GetScreenWidth() - m_texture.width * bg_scale) / 2.0f, 0.0f };
 
-    static const char* text = "SOLARIS";
-
-    static float font_size = 256.0f;
-    static float font_spacing = 50.0f;
-
+    constexpr const char* text = "SOLARIS";
     static Vector2 text_size =
-      MeasureTextEx(m_font, text, font_size, font_spacing);
+      MeasureTextEx(m_font, text, m_font_size, m_font_spacing);
     static Vector2 text_pos =
       Vector2{ (GetScreenWidth() - text_size.x) / 2.0f, 150.0f };
 
@@ -118,7 +139,7 @@ public:
     ClearBackground(BLACK);
 
     DrawTextureEx(m_texture, bg_position, 0.0f, bg_scale, WHITE);
-    DrawTextEx(m_font, text, text_pos, font_size, font_spacing, WHITE);
+    DrawTextEx(m_font, text, text_pos, m_font_size, m_font_spacing, WHITE);
 
     EndDrawing();
 
@@ -229,6 +250,7 @@ main()
 {
   SetConfigFlags(FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT | FLAG_WINDOW_UNDECORATED);
   InitWindow(0, 0, "solaris");
+  InitAudioDevice();
 
   g_current_scene = std::make_unique<MainMenu>();
 
@@ -239,5 +261,6 @@ main()
 
   g_current_scene.reset();
 
+  CloseAudioDevice();
   CloseWindow();
 }
