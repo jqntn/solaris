@@ -11,11 +11,13 @@
 #include <Ultralight/platform/Platform.h>
 #include <Ultralight/platform/Surface.h>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <machina/web_overlay.hpp>
 #include <memory>
 #include <raylib.h>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -25,6 +27,68 @@ namespace {
 
 constexpr std::string_view overlayUrl = "file:///web/poc.html";
 constexpr int scrollPixelsPerWheelStep = 32;
+constexpr std::string_view hitTestScriptPrefix = R"js(
+(function() {
+  const checkMouse = )js";
+constexpr std::string_view hitTestScriptMiddle = R"js(;
+  const x = )js";
+constexpr std::string_view hitTestScriptBody = R"js(;
+  const y = )js";
+constexpr std::string_view hitTestScriptSuffix = R"js(;
+
+  function visibleElement(node) {
+    if (!node || node.nodeType !== 1) {
+      return false;
+    }
+
+    const style = getComputedStyle(node);
+    return style.pointerEvents !== 'none' &&
+      style.visibility !== 'hidden' &&
+      style.display !== 'none' &&
+      Number(style.opacity || '1') > 0.01;
+  }
+
+  function capturesMouseAtPoint() {
+    if (!checkMouse) {
+      return false;
+    }
+
+    let node = document.elementFromPoint(x, y);
+    while (node && node !== document.documentElement) {
+      if (node === document.body) {
+        return false;
+      }
+
+      if (visibleElement(node)) {
+        const rect = node.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          return true;
+        }
+      }
+
+      node = node.parentElement;
+    }
+
+    return false;
+  }
+
+  function capturesKeyboard() {
+    const node = document.activeElement;
+    if (!node || node === document.body || node === document.documentElement) {
+      return false;
+    }
+
+    const tag = node.tagName ? node.tagName.toLowerCase() : '';
+    return tag === 'input' ||
+      tag === 'textarea' ||
+      tag === 'select' ||
+      node.isContentEditable === true;
+  }
+
+  return (capturesMouseAtPoint() ? '1' : '0') + '|' +
+    (capturesKeyboard() ? '1' : '0');
+})()
+)js";
 
 struct RaylibTextureDeleter
 {
@@ -61,6 +125,21 @@ UltralightMouseButton(int raylibButton)
       return ultralight::MouseEvent::kButton_Right;
     default:
       return ultralight::MouseEvent::kButton_None;
+  }
+}
+
+[[nodiscard]] std::size_t
+MouseButtonIndex(int raylibButton)
+{
+  switch (raylibButton) {
+    case MOUSE_BUTTON_LEFT:
+      return 0;
+    case MOUSE_BUTTON_MIDDLE:
+      return 1;
+    case MOUSE_BUTTON_RIGHT:
+      return 2;
+    default:
+      return 0;
   }
 }
 
@@ -168,13 +247,22 @@ public:
     SetMouseCursor(MOUSE_CURSOR_DEFAULT);
   }
 
-  void Update(bool acceptsInput)
+  WebOverlayInputCapture Update(bool acceptsInput)
   {
     mouseInside =
       acceptsInput && PointInRect(GetMousePosition(), x, y, width, height);
+    WebOverlayInputCapture inputCapture =
+      acceptsInput ? QueryInputCapture() : WebOverlayInputCapture{};
 
     if (mouseInside) {
-      ForwardMouseInput();
+      if (AnyCapturedMouseButton()) {
+        inputCapture.mouse = true;
+      }
+
+      ForwardMouseInput(inputCapture.mouse);
+      if (!inputCapture.mouse && !AnyCapturedMouseButton()) {
+        SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+      }
     } else if (wasMouseInside) {
       SetMouseCursor(MOUSE_CURSOR_DEFAULT);
     }
@@ -185,6 +273,7 @@ public:
     renderer->RefreshDisplay(0);
     renderer->Render();
     UploadIfDirty();
+    return inputCapture;
   }
 
   void Draw() const
@@ -205,7 +294,54 @@ public:
   }
 
 private:
-  void ForwardMouseInput()
+  [[nodiscard]] WebOverlayInputCapture QueryInputCapture() const
+  {
+    const Vector2 mousePosition = GetMousePosition();
+    const int localX =
+      std::clamp(static_cast<int>(std::floor(mousePosition.x)) - x, 0, width);
+    const int localY =
+      std::clamp(static_cast<int>(std::floor(mousePosition.y)) - y, 0, height);
+    const std::string result =
+      EvaluateString(HitTestScript(mouseInside, localX, localY));
+
+    if (result.size() < 3) {
+      return {};
+    }
+
+    return WebOverlayInputCapture{ .mouse = result[0] == '1',
+                                   .keyboard = result[2] == '1' };
+  }
+
+  [[nodiscard]] std::string HitTestScript(bool checkMouse,
+                                          int localX,
+                                          int localY) const
+  {
+    std::string script;
+    script.reserve(hitTestScriptPrefix.size() + hitTestScriptMiddle.size() +
+                   hitTestScriptBody.size() + hitTestScriptSuffix.size() + 32);
+    script += hitTestScriptPrefix;
+    script += checkMouse ? "true" : "false";
+    script += hitTestScriptMiddle;
+    script += std::to_string(localX);
+    script += hitTestScriptBody;
+    script += std::to_string(localY);
+    script += hitTestScriptSuffix;
+    return script;
+  }
+
+  [[nodiscard]] std::string EvaluateString(std::string_view script) const
+  {
+    ultralight::String exception;
+    const ultralight::String result = view->EvaluateScript(
+      ultralight::String(script.data(), script.size()), &exception);
+    if (!exception.empty() || result.empty()) {
+      return {};
+    }
+
+    return std::string(result.utf8().data(), result.utf8().length());
+  }
+
+  void ForwardMouseInput(bool mouseCaptured)
   {
     const Vector2 mousePosition = GetMousePosition();
     const int localX =
@@ -217,20 +353,34 @@ private:
     moveEvent.type = ultralight::MouseEvent::kType_MouseMoved;
     moveEvent.x = localX;
     moveEvent.y = localY;
-    moveEvent.button = CurrentMouseButton();
+    moveEvent.button = CurrentCapturedMouseButton();
     view->FireMouseEvent(moveEvent);
 
-    ForwardMouseButton(localX, localY, MOUSE_BUTTON_LEFT);
-    ForwardMouseButton(localX, localY, MOUSE_BUTTON_MIDDLE);
-    ForwardMouseButton(localX, localY, MOUSE_BUTTON_RIGHT);
-    ForwardScrollInput();
+    ForwardMouseButton(localX, localY, MOUSE_BUTTON_LEFT, mouseCaptured);
+    ForwardMouseButton(localX, localY, MOUSE_BUTTON_MIDDLE, mouseCaptured);
+    ForwardMouseButton(localX, localY, MOUSE_BUTTON_RIGHT, mouseCaptured);
+    if (mouseCaptured) {
+      ForwardScrollInput();
+    }
   }
 
-  void ForwardMouseButton(int localX, int localY, int raylibButton)
+  void ForwardMouseButton(int localX,
+                          int localY,
+                          int raylibButton,
+                          bool mouseCaptured)
   {
     const bool isPressed = IsMouseButtonPressed(raylibButton);
     const bool isReleased = IsMouseButtonReleased(raylibButton);
     if (!isPressed && !isReleased) {
+      return;
+    }
+
+    const std::size_t buttonIndex = MouseButtonIndex(raylibButton);
+    if (isPressed && mouseCaptured) {
+      capturedMouseButtons[buttonIndex] = true;
+    }
+
+    if (!mouseCaptured && !capturedMouseButtons[buttonIndex]) {
       return;
     }
 
@@ -245,6 +395,10 @@ private:
     buttonEvent.y = localY;
     buttonEvent.button = UltralightMouseButton(raylibButton);
     view->FireMouseEvent(buttonEvent);
+
+    if (isReleased) {
+      capturedMouseButtons[buttonIndex] = false;
+    }
   }
 
   void ForwardScrollInput()
@@ -261,18 +415,28 @@ private:
     view->FireScrollEvent(scrollEvent);
   }
 
-  [[nodiscard]] ultralight::MouseEvent::Button CurrentMouseButton() const
+  [[nodiscard]] ultralight::MouseEvent::Button CurrentCapturedMouseButton()
+    const
   {
-    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+    if (capturedMouseButtons[MouseButtonIndex(MOUSE_BUTTON_LEFT)] &&
+        IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
       return ultralight::MouseEvent::kButton_Left;
     }
-    if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
+    if (capturedMouseButtons[MouseButtonIndex(MOUSE_BUTTON_MIDDLE)] &&
+        IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
       return ultralight::MouseEvent::kButton_Middle;
     }
-    if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+    if (capturedMouseButtons[MouseButtonIndex(MOUSE_BUTTON_RIGHT)] &&
+        IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
       return ultralight::MouseEvent::kButton_Right;
     }
     return ultralight::MouseEvent::kButton_None;
+  }
+
+  [[nodiscard]] bool AnyCapturedMouseButton() const
+  {
+    return capturedMouseButtons[0] || capturedMouseButtons[1] ||
+           capturedMouseButtons[2];
   }
 
   void UploadIfDirty()
@@ -327,6 +491,7 @@ private:
   std::vector<std::uint8_t> uploadPixels;
   ultralight::RefPtr<ultralight::Renderer> renderer;
   ultralight::RefPtr<ultralight::View> view;
+  std::array<bool, 3> capturedMouseButtons = {};
   bool mouseInside = false;
   bool wasMouseInside = false;
 };
@@ -338,10 +503,10 @@ WebOverlay::WebOverlay(int x, int y, int width, int height)
 
 WebOverlay::~WebOverlay() = default;
 
-void
+WebOverlayInputCapture
 WebOverlay::Update(bool acceptsInput)
 {
-  impl->Update(acceptsInput);
+  return impl->Update(acceptsInput);
 }
 
 void

@@ -4,12 +4,12 @@
 #include <machina/level_instantiator.hpp>
 #include <machina/materialx_shader_generator.hpp>
 #include <machina/renderer.hpp>
+#include <machina/strategic_camera_controller.hpp>
 #include <machina/usd_level_loader.hpp>
 #include <machina/web_overlay.hpp>
 #include <memory>
 #include <print>
 #include <raylib.h>
-#include <raymath.h>
 #include <string_view>
 #include <vector>
 
@@ -88,18 +88,16 @@ main()
   machina::LevelInstantiator().Instantiate(registry, level);
 
   bool showFps = false;
-  Camera camera = {
-    .position = Vector3Scale(Vector3One(), 6.0f),
-    .target = Vector3Zero(),
-    .up = Vector3{ 0.0f, 1.0f, 0.0f },
-    .fovy = 60.0f,
-    .projection = CAMERA_PERSPECTIVE,
-  };
+  machina::StrategicCameraController cameraController;
 
   while (!WindowShouldClose()) {
     showFps = showFps != IsKeyPressed(KEY_F1);
-    webOverlay->Update(true);
-    UpdateCamera(&camera, CAMERA_ORBITAL);
+    const machina::WebOverlayInputCapture overlayCapture =
+      webOverlay->Update(true);
+    cameraController.Update(machina::StrategicCameraControls::Read(
+      { .mouseBlockedByUi = overlayCapture.mouse,
+        .keyboardBlockedByUi = overlayCapture.keyboard }));
+    const Camera camera = cameraController.Camera3D();
 
     BeginDrawing();
     ClearBackground(Color{ 63, 63, 63, 255 });

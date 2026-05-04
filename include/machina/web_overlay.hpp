@@ -4,13 +4,19 @@
 
 namespace machina {
 
+struct WebOverlayInputCapture
+{
+  bool mouse = false;
+  bool keyboard = false;
+};
+
 class WebOverlay
 {
 public:
   WebOverlay(int x, int y, int width, int height);
   ~WebOverlay();
 
-  void Update(bool acceptsInput);
+  [[nodiscard]] WebOverlayInputCapture Update(bool acceptsInput);
   void Draw() const;
 
 private:

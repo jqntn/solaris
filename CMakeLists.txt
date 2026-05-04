@@ -26,6 +26,7 @@ set(MACHINA_ENGINE_SOURCES
     src/level_instantiator.cpp
     src/materialx_shader_generator.cpp
     src/renderer.cpp
+    src/strategic_camera_controller.cpp
     src/usd_level_loader.cpp
     src/web_overlay.cpp)
 
@@ -98,6 +99,14 @@ set_target_properties(machina_level_smoke PROPERTIES CXX_CLANG_TIDY "${MACHINA_C
 
 add_test(NAME level_smoke COMMAND machina_level_smoke)
 set_tests_properties(level_smoke PROPERTIES WORKING_DIRECTORY "$<TARGET_FILE_DIR:machina_level_smoke>")
+
+add_executable(machina_strategic_camera tests/strategic_camera_controller_test.cpp)
+target_link_libraries(machina_strategic_camera PRIVATE machina_engine)
+set_target_properties(
+    machina_strategic_camera
+    PROPERTIES CXX_CLANG_TIDY "${MACHINA_CLANG_TIDY}")
+
+add_test(NAME strategic_camera_controller COMMAND machina_strategic_camera)
 
 function(machina_copy_assets target)
     add_custom_command(
