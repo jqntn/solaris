@@ -45,6 +45,7 @@ ImmediateSettings()
   settings.minDistance = 4.0f;
   settings.maxDistance = 12.0f;
   settings.panSpeed = 10.0f;
+  settings.mousePanSpeed = 0.001f;
   settings.edgeScrollThreshold = 10.0f;
   return settings;
 }
@@ -126,6 +127,33 @@ CheckEdgePan()
 }
 
 [[nodiscard]] int
+CheckLeftDragPansMap()
+{
+  machina::StrategicCameraSettings settings = ImmediateSettings();
+  settings.defaultYawDegrees = 0.0f;
+  machina::StrategicCameraController controller(settings);
+
+  machina::StrategicCameraInput input = BaseInput();
+  input.panCamera = true;
+  input.mouseDelta = Vector2{ 10.0f, 0.0f };
+  controller.Update(input);
+
+  if (!Near(controller.Target().x, -0.1f) ||
+      !Near(controller.Target().z, 0.0f)) {
+    return Fail("expected left mouse drag to pan the map plane");
+  }
+
+  machina::StrategicCameraController blockedController(settings);
+  input.mouseBlockedByUi = true;
+  blockedController.Update(input);
+  if (!Same(blockedController.Target(), Vector3{})) {
+    return Fail("expected UI capture to block left mouse drag pan");
+  }
+
+  return 0;
+}
+
+[[nodiscard]] int
 CheckRightDragRotatesYaw()
 {
   machina::StrategicCameraSettings settings = ImmediateSettings();
@@ -180,6 +208,9 @@ main()
     return result;
   }
   if (const int result = CheckEdgePan(); result != 0) {
+    return result;
+  }
+  if (const int result = CheckLeftDragPansMap(); result != 0) {
     return result;
   }
   if (const int result = CheckRightDragRotatesYaw(); result != 0) {

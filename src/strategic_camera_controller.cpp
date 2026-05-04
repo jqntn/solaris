@@ -108,11 +108,16 @@ EdgeAxis(float position, int size, float threshold)
 }
 
 [[nodiscard]] Vector3
+PlanarPanVector(float panRight, float panForward, float yawDegrees)
+{
+  return Vector3Add(Vector3Scale(HorizontalRight(yawDegrees), panRight),
+                    Vector3Scale(HorizontalForward(yawDegrees), panForward));
+}
+
+[[nodiscard]] Vector3
 PlanarPanDirection(float panRight, float panForward, float yawDegrees)
 {
-  Vector3 direction =
-    Vector3Add(Vector3Scale(HorizontalRight(yawDegrees), panRight),
-               Vector3Scale(HorizontalForward(yawDegrees), panForward));
+  Vector3 direction = PlanarPanVector(panRight, panForward, yawDegrees);
   const float length = Vector3Length(direction);
   if (length > 1.0f) {
     direction = Vector3Scale(direction, 1.0f / length);
@@ -152,6 +157,7 @@ StrategicCameraControls::Read(StrategicCameraControlCapture capture)
                      IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)),
     .panForward = Axis(IsKeyDown(KEY_W) || IsKeyDown(KEY_UP),
                        IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)),
+    .panCamera = IsMouseButtonDown(MOUSE_BUTTON_LEFT),
     .rotateCamera = IsMouseButtonDown(MOUSE_BUTTON_RIGHT),
     .boost = IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT),
     .mouseBlockedByUi = capture.mouseBlockedByUi,
@@ -185,10 +191,20 @@ StrategicCameraController::Update(const StrategicCameraInput& input)
                             : std::clamp(input.panForward, -1.0f, 1.0f);
 
   if (!input.mouseBlockedByUi && MouseInsideScreen(input)) {
-    inputPanRight += EdgeAxis(
-      input.mousePosition.x, input.screenWidth, settings.edgeScrollThreshold);
-    inputPanForward -= EdgeAxis(
-      input.mousePosition.y, input.screenHeight, settings.edgeScrollThreshold);
+    if (input.panCamera) {
+      desiredTarget = Vector3Add(
+        desiredTarget,
+        Vector3Scale(
+          PlanarPanVector(
+            -input.mouseDelta.x, input.mouseDelta.y, desiredYawDegrees),
+          std::max(desiredDistance, 0.01f) * settings.mousePanSpeed));
+    } else {
+      inputPanRight += EdgeAxis(
+        input.mousePosition.x, input.screenWidth, settings.edgeScrollThreshold);
+      inputPanForward -= EdgeAxis(input.mousePosition.y,
+                                  input.screenHeight,
+                                  settings.edgeScrollThreshold);
+    }
 
     if (input.rotateCamera) {
       desiredYawDegrees = NormalizeDegrees(

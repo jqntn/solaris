@@ -13,8 +13,9 @@ struct StrategicCameraSettings
   float minDistance = 3.0f;
   float maxDistance = 120.0f;
   float panSpeed = 6.0f;
+  float mousePanSpeed = 0.001f;
   float zoomSpeed = 0.14f;
-  float rotationSpeedDegrees = 0.22f;
+  float rotationSpeedDegrees = 0.11f;
   float edgeScrollThreshold = 18.0f;
   float smoothingStrength = 14.0f;
   float boostMultiplier = 2.75f;
@@ -31,6 +32,7 @@ struct StrategicCameraInput
   float mouseWheel = 0.0f;
   float panRight = 0.0f;
   float panForward = 0.0f;
+  bool panCamera = false;
   bool rotateCamera = false;
   bool boost = false;
   bool mouseBlockedByUi = false;
