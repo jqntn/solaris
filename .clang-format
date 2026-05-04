@@ -1,5 +1,6 @@
 ---
 BasedOnStyle: Mozilla
 LineEnding: LF
+InsertBraces: true
 
 ...

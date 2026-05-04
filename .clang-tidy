@@ -1,0 +1,76 @@
+---
+Checks: '-*,readability-identifier-naming,readability-uppercase-literal-suffix'
+WarningsAsErrors: 'readability-identifier-naming,readability-uppercase-literal-suffix'
+CheckOptions:
+  - key: readability-identifier-naming.IgnoreMainLikeFunctions
+    value: true
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.ScopedEnumConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.UnionCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypedefCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypeAliasCase
+    value: CamelCase
+  - key: readability-identifier-naming.FunctionCase
+    value: CamelCase
+  - key: readability-identifier-naming.MethodCase
+    value: CamelCase
+  - key: readability-identifier-naming.ConstexprFunctionCase
+    value: CamelCase
+  - key: readability-identifier-naming.ConstexprMethodCase
+    value: CamelCase
+  - key: readability-identifier-naming.VariableCase
+    value: camelBack
+  - key: readability-identifier-naming.GlobalVariableCase
+    value: camelBack
+  - key: readability-identifier-naming.GlobalVariableIgnoredRegexp
+    value: '^(NvOptimusEnablement|AmdPowerXpressRequestHighPerformance)$'
+  - key: readability-identifier-naming.LocalVariableCase
+    value: camelBack
+  - key: readability-identifier-naming.ParameterCase
+    value: camelBack
+  - key: readability-identifier-naming.MemberCase
+    value: camelBack
+  - key: readability-identifier-naming.PublicMemberCase
+    value: camelBack
+  - key: readability-identifier-naming.ProtectedMemberCase
+    value: camelBack
+  - key: readability-identifier-naming.PrivateMemberCase
+    value: camelBack
+  - key: readability-identifier-naming.ConstantCase
+    value: camelBack
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: camelBack
+  - key: readability-identifier-naming.StaticConstantCase
+    value: camelBack
+  - key: readability-identifier-naming.LocalConstantCase
+    value: camelBack
+  - key: readability-identifier-naming.MemberConstantCase
+    value: camelBack
+  - key: readability-identifier-naming.PublicMemberConstantCase
+    value: camelBack
+  - key: readability-identifier-naming.ProtectedMemberConstantCase
+    value: camelBack
+  - key: readability-identifier-naming.PrivateMemberConstantCase
+    value: camelBack
+  - key: readability-identifier-naming.ConstexprVariableCase
+    value: camelBack
+  - key: readability-identifier-naming.GlobalConstexprVariableCase
+    value: camelBack
+  - key: readability-identifier-naming.StaticConstexprVariableCase
+    value: camelBack
+  - key: readability-identifier-naming.LocalConstexprVariableCase
+    value: camelBack
+  - key: readability-identifier-naming.MemberConstexprVariableCase
+    value: camelBack
+  - key: readability-uppercase-literal-suffix.NewSuffixes
+    value: f

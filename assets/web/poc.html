@@ -1,0 +1,156 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: transparent;
+        font-family: Inter, Segoe UI, Arial, sans-serif;
+        color: #eef5ff;
+        -webkit-user-select: none;
+      }
+
+      body {
+        display: flex;
+        align-items: stretch;
+        justify-content: stretch;
+        padding: 16px;
+        box-sizing: border-box;
+      }
+
+      .panel {
+        width: 520px;
+        height: 320px;
+        box-sizing: border-box;
+        padding: 18px;
+        border: 1px solid rgba(177, 222, 255, 0.38);
+        border-radius: 8px;
+        background: rgba(10, 16, 22, 0.78);
+      }
+
+      .topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .badge {
+        padding: 5px 8px;
+        border-radius: 6px;
+        background: rgba(126, 207, 154, 0.2);
+        color: #9af2b5;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .metric {
+        padding: 12px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .label {
+        margin: 0 0 6px;
+        color: #95a9ba;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .value {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 800;
+      }
+
+      button {
+        width: 100%;
+        height: 42px;
+        border: 0;
+        border-radius: 8px;
+        background: #e6f7ff;
+        color: #17202a;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #bfefff;
+      }
+
+      .log {
+        height: 82px;
+        margin-top: 14px;
+        padding: 10px 12px;
+        overflow: auto;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.28);
+        color: #c9d8e4;
+        font-size: 13px;
+        line-height: 1.35;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="panel">
+      <div class="topline">
+        <h1 class="title">Ultralight Overlay</h1>
+        <span class="badge">live web view</span>
+      </div>
+
+      <div class="metrics">
+        <div class="metric">
+          <p class="label">Clicks</p>
+          <p class="value" id="count">0</p>
+        </div>
+        <div class="metric">
+          <p class="label">State</p>
+          <p class="value" id="state">idle</p>
+        </div>
+      </div>
+
+      <button id="button">Increment Web State</button>
+
+      <div class="log" id="log">
+        Mouse, click, and scroll events are handled by this HTML panel.
+      </div>
+    </section>
+
+    <script>
+      const countEl = document.getElementById('count');
+      const stateEl = document.getElementById('state');
+      const logEl = document.getElementById('log');
+      let count = 0;
+
+      document.getElementById('button').addEventListener('click', () => {
+        count += 1;
+        countEl.textContent = count;
+        stateEl.textContent = count % 2 === 0 ? 'even' : 'odd';
+        const line = document.createElement('div');
+        line.textContent = `click ${count} at ${new Date().toLocaleTimeString()}`;
+        logEl.prepend(line);
+      });
+    </script>
+  </body>
+</html>
