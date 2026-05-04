@@ -174,6 +174,44 @@ CheckRightDragRotatesYaw()
 }
 
 [[nodiscard]] int
+CheckRightDragRotatesPitch()
+{
+  machina::StrategicCameraSettings settings = ImmediateSettings();
+  settings.pitchDegrees = 42.0f;
+  settings.minPitchDegrees = 30.0f;
+  settings.maxPitchDegrees = 88.0f;
+  settings.rotationSpeedDegrees = 0.5f;
+  machina::StrategicCameraController controller(settings);
+
+  machina::StrategicCameraInput input = BaseInput();
+  input.rotateCamera = true;
+  input.mouseDelta = Vector2{ 0.0f, -10.0f };
+  controller.Update(input);
+
+  if (!Near(controller.PitchDegrees(), 37.0f)) {
+    return Fail("expected right-drag vertical motion to adjust pitch");
+  }
+
+  input.mouseDelta = Vector2{ 0.0f, -100.0f };
+  controller.Update(input);
+  if (!Near(controller.PitchDegrees(), settings.minPitchDegrees)) {
+    return Fail("expected pitch to clamp to minimum angle");
+  }
+
+  input.mouseDelta = Vector2{ 0.0f, 1000.0f };
+  controller.Update(input);
+  if (!Near(controller.PitchDegrees(), settings.maxPitchDegrees)) {
+    return Fail("expected pitch to clamp to maximum angle");
+  }
+
+  if (controller.PitchDegrees() >= 90.0f) {
+    return Fail("expected pitch to stay below exact zenith singularity");
+  }
+
+  return 0;
+}
+
+[[nodiscard]] int
 CheckFocusCentersTarget()
 {
   machina::StrategicCameraController controller(ImmediateSettings());
@@ -214,6 +252,9 @@ main()
     return result;
   }
   if (const int result = CheckRightDragRotatesYaw(); result != 0) {
+    return result;
+  }
+  if (const int result = CheckRightDragRotatesPitch(); result != 0) {
     return result;
   }
   if (const int result = CheckFocusCentersTarget(); result != 0) {

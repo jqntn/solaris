@@ -33,6 +33,26 @@ ClampDistance(float distance, const StrategicCameraSettings& settings)
 }
 
 [[nodiscard]] float
+MinimumPitch(const StrategicCameraSettings& settings)
+{
+  return std::clamp(settings.minPitchDegrees, 1.0f, 89.0f);
+}
+
+[[nodiscard]] float
+MaximumPitch(const StrategicCameraSettings& settings)
+{
+  return std::clamp(
+    std::max(settings.maxPitchDegrees, MinimumPitch(settings)), 1.0f, 89.0f);
+}
+
+[[nodiscard]] float
+ClampPitch(float pitchDegrees, const StrategicCameraSettings& settings)
+{
+  return std::clamp(
+    pitchDegrees, MinimumPitch(settings), MaximumPitch(settings));
+}
+
+[[nodiscard]] float
 NormalizeDegrees(float degrees)
 {
   float normalized = std::fmod(degrees, 360.0f);
@@ -127,13 +147,10 @@ PlanarPanDirection(float panRight, float panForward, float yawDegrees)
 }
 
 [[nodiscard]] Vector3
-CameraOffset(float distance,
-             float yawDegrees,
-             const StrategicCameraSettings& settings)
+CameraOffset(float distance, float yawDegrees, float pitchDegrees)
 {
   const float yawRadians = yawDegrees * DEG2RAD;
-  const float pitchRadians =
-    std::clamp(settings.pitchDegrees, 5.0f, 85.0f) * DEG2RAD;
+  const float pitchRadians = pitchDegrees * DEG2RAD;
   const float horizontalDistance = std::cos(pitchRadians) * distance;
 
   return Vector3{ std::sin(yawRadians) * horizontalDistance,
@@ -177,6 +194,8 @@ StrategicCameraController::StrategicCameraController(
   , desiredDistance(distance)
   , yawDegrees(NormalizeDegrees(settings.defaultYawDegrees))
   , desiredYawDegrees(yawDegrees)
+  , pitchDegrees(ClampPitch(settings.pitchDegrees, settings))
+  , desiredPitchDegrees(pitchDegrees)
 {
 }
 
@@ -209,6 +228,10 @@ StrategicCameraController::Update(const StrategicCameraInput& input)
     if (input.rotateCamera) {
       desiredYawDegrees = NormalizeDegrees(
         desiredYawDegrees - input.mouseDelta.x * settings.rotationSpeedDegrees);
+      desiredPitchDegrees =
+        ClampPitch(desiredPitchDegrees +
+                     input.mouseDelta.y * settings.rotationSpeedDegrees,
+                   settings);
     }
 
     if (input.mouseWheel != 0.0f) {
@@ -236,6 +259,7 @@ StrategicCameraController::Update(const StrategicCameraInput& input)
   distance += (desiredDistance - distance) * alpha;
   yawDegrees = NormalizeDegrees(
     yawDegrees + ShortestAngleDelta(yawDegrees, desiredYawDegrees) * alpha);
+  pitchDegrees += (desiredPitchDegrees - pitchDegrees) * alpha;
 }
 
 void
@@ -255,7 +279,7 @@ Camera
 StrategicCameraController::Camera3D() const
 {
   const Vector3 position =
-    Vector3Add(target, CameraOffset(distance, yawDegrees, settings));
+    Vector3Add(target, CameraOffset(distance, yawDegrees, pitchDegrees));
   return Camera{ .position = position,
                  .target = target,
                  .up = Vector3{ 0.0f, 1.0f, 0.0f },
@@ -279,6 +303,12 @@ float
 StrategicCameraController::YawDegrees() const
 {
   return yawDegrees;
+}
+
+float
+StrategicCameraController::PitchDegrees() const
+{
+  return pitchDegrees;
 }
 
 }

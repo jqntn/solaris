@@ -9,6 +9,8 @@ struct StrategicCameraSettings
 {
   float defaultYawDegrees = 45.0f;
   float pitchDegrees = 42.0f;
+  float minPitchDegrees = 25.0f;
+  float maxPitchDegrees = 88.0f;
   float defaultDistance = 10.0f;
   float minDistance = 3.0f;
   float maxDistance = 120.0f;
@@ -65,6 +67,7 @@ public:
   [[nodiscard]] Vector3 Target() const;
   [[nodiscard]] float Distance() const;
   [[nodiscard]] float YawDegrees() const;
+  [[nodiscard]] float PitchDegrees() const;
 
 private:
   StrategicCameraSettings settings;
@@ -74,6 +77,8 @@ private:
   float desiredDistance = 0.0f;
   float yawDegrees = 0.0f;
   float desiredYawDegrees = 0.0f;
+  float pitchDegrees = 0.0f;
+  float desiredPitchDegrees = 0.0f;
 };
 
 }
