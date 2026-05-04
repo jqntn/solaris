@@ -58,7 +58,7 @@ main()
   }
 
   SetConfigFlags(FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT | FLAG_WINDOW_UNDECORATED);
-  InitWindow(1, 1, "machina");
+  InitWindow(1, 1, "solaris");
 
   const int currentMonitor = GetCurrentMonitor();
   const int monitorWidth = GetMonitorWidth(currentMonitor);

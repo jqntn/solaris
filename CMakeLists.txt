@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(machina LANGUAGES CXX)
+project(solaris LANGUAGES CXX)
 
 include(FetchContent)
 include(cmake/make_distribution.cmake)
@@ -46,8 +46,8 @@ target_link_libraries(
            machina_nvidia_usd
            machina_ultralight)
 
-add_executable(machina src/main.cpp)
-target_link_libraries(machina PRIVATE machina_engine)
+add_executable(solaris src/main.cpp)
+target_link_libraries(solaris PRIVATE machina_engine)
 
 find_program(
     CLANG_FORMAT_EXE
@@ -81,18 +81,18 @@ add_custom_target(
     COMMENT "Formatting machina sources")
 
 add_dependencies(machina_engine format)
-add_dependencies(machina format)
+add_dependencies(solaris format)
 
 set_target_properties(
     machina_engine
-    machina
+    solaris
     PROPERTIES CXX_CLANG_TIDY "${MACHINA_CLANG_TIDY}")
 
 enable_testing()
 
 add_executable(machina_level_smoke tests/level_smoke.cpp)
 target_link_libraries(machina_level_smoke PRIVATE machina_engine)
-add_dependencies(machina_level_smoke machina)
+add_dependencies(machina_level_smoke solaris)
 
 set_target_properties(machina_level_smoke PROPERTIES CXX_CLANG_TIDY "${MACHINA_CLANG_TIDY}")
 
@@ -108,11 +108,11 @@ function(machina_copy_assets target)
                 "$<TARGET_FILE_DIR:${target}>/${MACHINA_ASSETS_RUNTIME_ROOT}")
 endfunction()
 
-machina_copy_assets(machina)
-machina_copy_nvidia_usd_runtime(machina)
-machina_copy_ultralight_runtime(machina)
+machina_copy_assets(solaris)
+machina_copy_nvidia_usd_runtime(solaris)
+machina_copy_ultralight_runtime(solaris)
 
 machina_add_distribution_target(
-    TARGET machina
+    TARGET solaris
     OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/out/distrib")
 machina_add_ultralight_runtime_copy(distrib "${CMAKE_CURRENT_SOURCE_DIR}/out/distrib")
