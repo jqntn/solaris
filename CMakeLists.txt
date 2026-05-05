@@ -127,12 +127,14 @@ set_target_properties(solaris_menu_commands PROPERTIES CXX_CLANG_TIDY "${MACHINA
 add_test(NAME menu_commands COMMAND solaris_menu_commands)
 
 function(machina_copy_assets target)
-    add_custom_command(
-        TARGET "${target}"
-        POST_BUILD
+    add_custom_target(
+        "${target}_assets"
+        ALL
         COMMAND "${CMAKE_COMMAND}" -E copy_directory
                 "${MACHINA_ASSETS_SOURCE_DIR}"
-                "$<TARGET_FILE_DIR:${target}>/${MACHINA_ASSETS_RUNTIME_ROOT}")
+                "$<TARGET_FILE_DIR:${target}>/${MACHINA_ASSETS_RUNTIME_ROOT}"
+        COMMENT "Copying assets for ${target}")
+    add_dependencies("${target}" "${target}_assets")
 endfunction()
 
 machina_copy_assets(solaris)

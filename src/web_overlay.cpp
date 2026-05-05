@@ -293,6 +293,13 @@ LoadBlankTexture(int width, int height)
   return TextureHandle(loadedTexture.release());
 }
 
+void
+DrainKeyboardInput()
+{
+  while (GetKeyPressed() != 0) {
+  }
+}
+
 }
 
 class WebOverlay::Impl final
@@ -367,12 +374,19 @@ public:
       }
 
       ForwardMouseInput(inputCapture.mouse);
-      ForwardKeyboardInput();
       if (!inputCapture.mouse && !AnyCapturedMouseButton()) {
         SetMouseCursor(MOUSE_CURSOR_DEFAULT);
       }
     } else if (wasMouseInside) {
       SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+    }
+
+    if (acceptsInput) {
+      if (IsWindowFocused()) {
+        ForwardKeyboardInput();
+      } else {
+        DrainKeyboardInput();
+      }
     }
 
     wasMouseInside = mouseInside;
@@ -416,7 +430,12 @@ public:
   {
     (void)frameId;
     (void)url;
-    if (!isMainFrame || !commandHandler) {
+    if (!isMainFrame) {
+      return;
+    }
+
+    view->Focus();
+    if (!commandHandler) {
       return;
     }
 

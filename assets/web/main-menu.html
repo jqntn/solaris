@@ -44,18 +44,10 @@
         margin: 0;
         color: var(--ink-high);
         font-family: var(--font-title);
-        font-size: 4.5rem;
+        font-size: 5.4rem;
         font-weight: 600;
         line-height: 0.95;
         text-shadow: 0 18px 42px var(--shadow);
-      }
-
-      .subtitle {
-        max-width: 28rem;
-        margin: var(--space-3) 0 0;
-        color: var(--ink-muted);
-        font-size: 1.05rem;
-        line-height: 1.4;
       }
 
       .main-nav {
@@ -163,14 +155,21 @@
         grid-template-columns: 1fr minmax(160px, 240px);
       }
 
-      .setting-row input[type="range"] {
-        width: 100%;
+      .setting-control {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: var(--space-2);
       }
 
-      .setting-row input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-        justify-self: end;
+      .step-button {
+        width: 44px;
+        padding: 0;
+      }
+
+      .toggle-button[aria-pressed="true"] {
+        border-color: rgba(128, 216, 162, 0.52);
+        color: var(--confirm);
       }
 
       .setting-row.is-readonly {
@@ -202,6 +201,37 @@
         font-size: 0.9rem;
       }
 
+      .keyboard-hints {
+        position: fixed;
+        right: var(--space-6);
+        bottom: var(--space-5);
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        color: var(--ink-dim);
+        font-size: 0.86rem;
+      }
+
+      .keyboard-hint {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+      }
+
+      .keycap {
+        min-width: 32px;
+        min-height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2px 8px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        background: rgba(7, 13, 18, 0.72);
+        color: var(--ink);
+        font-weight: 600;
+      }
+
       @media (max-width: 980px) {
         .menu-root {
           grid-template-columns: 1fr;
@@ -210,7 +240,7 @@
         }
 
         .title {
-          font-size: 3rem;
+          font-size: 3.6rem;
         }
 
         .main-nav {
@@ -221,6 +251,11 @@
         .view-column {
           align-items: stretch;
         }
+
+        .keyboard-hints {
+          right: var(--space-4);
+          bottom: var(--space-3);
+        }
       }
     </style>
   </head>
@@ -230,11 +265,10 @@
         <div class="brand-block">
           <p class="eyebrow">working title / prototype branch</p>
           <h1 class="title">SOLARIS</h1>
-          <p class="subtitle">A civilization under pressure, built through identity, routes, politics, and consequence.</p>
         </div>
 
         <nav class="main-nav" aria-label="Main menu">
-          <button class="nav-button primary-action" id="newGameButton" data-key="Enter" data-command="new_game">New Game</button>
+          <button class="nav-button primary-action" id="newGameButton" data-key="N" data-command="new_game">New Game</button>
           <button class="nav-button" data-key="C" data-view="continue">Continue</button>
           <button class="nav-button" data-key="L" data-view="load">Load</button>
           <button class="nav-button" data-key="S" data-view="settings">Settings</button>
@@ -309,20 +343,23 @@
           </section>
 
           <section class="view stack" data-panel="settings">
-            <label class="setting-row">
+            <div class="setting-row">
               <span>
                 <span class="row-label">Menu music volume</span>
                 <span class="row-value" id="volumeValue">72%</span>
               </span>
-              <input id="volumeRange" type="range" min="0" max="100" value="72">
-            </label>
-            <label class="setting-row">
+              <span class="setting-control" role="group" aria-label="Menu music volume">
+                <button class="step-button" id="volumeDownButton" type="button" aria-label="Lower menu music volume">-</button>
+                <button class="step-button" id="volumeUpButton" type="button" aria-label="Raise menu music volume">+</button>
+              </span>
+            </div>
+            <div class="setting-row">
               <span>
                 <span class="row-label">Mute menu music</span>
                 <span class="row-value">Session only</span>
               </span>
-              <input id="muteToggle" type="checkbox">
-            </label>
+              <button class="toggle-button" id="muteToggleButton" type="button" aria-pressed="false">Off</button>
+            </div>
             <div class="setting-row is-readonly">
               <span>
                 <span class="row-label">Display mode</span>
@@ -363,6 +400,28 @@
       </section>
     </main>
 
+    <div class="keyboard-hints" aria-label="Keyboard controls">
+      <span class="keyboard-hint"><span class="keycap">Esc</span> Back</span>
+      <span class="keyboard-hint"><span class="keycap">Enter</span> Confirm</span>
+    </div>
+
+    <div class="ui-modal" id="quitConfirm" role="presentation" aria-hidden="true">
+      <section class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="quitConfirmTitle">
+        <header>
+          <p class="eyebrow">Exit command</p>
+          <h2 class="panel-title" id="quitConfirmTitle">Quit Solaris?</h2>
+        </header>
+        <div class="ui-dialog-body">
+          <p class="body-copy">Leave the current session and close the application.</p>
+          <div class="ui-dialog-actions">
+            <button id="cancelQuitButton" type="button">Cancel</button>
+            <button id="confirmQuitButton" class="primary-action" type="button">Quit</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script src="ui.js"></script>
     <script>
       const viewMeta = {
         home: ["Command interface", "Campaign Entry", "Standing by"],
@@ -379,6 +438,14 @@
       const newGameButton = document.getElementById("newGameButton");
       const newGameButtons = Array.from(document.querySelectorAll('[data-command="new_game"]'));
       const navButtons = Array.from(document.querySelectorAll(".nav-button"));
+      const quitConfirm = window.solarisUi.createConfirmDialog({
+        modal: document.getElementById("quitConfirm"),
+        cancelButton: document.getElementById("cancelQuitButton"),
+        confirmButton: document.getElementById("confirmQuitButton"),
+        onConfirm: () => {
+          sendNative("quit");
+        }
+      });
 
       function sendNative(command, payload = "") {
         if (typeof window.solarisNativeCommand === "function") {
@@ -414,6 +481,10 @@
       }
 
       function runCommand(command) {
+        if (command === "quit") {
+          quitConfirm.open();
+          return;
+        }
         if (command === "new_game") {
           newGameButtons.forEach((button) => {
             button.disabled = true;
@@ -423,8 +494,7 @@
         sendNative(command);
       }
 
-      document.addEventListener("click", (event) => {
-        const button = event.target.closest("button");
+      function activateButton(button) {
         if (!button || button.disabled) {
           return;
         }
@@ -435,35 +505,113 @@
         if (button.dataset.command) {
           runCommand(button.dataset.command);
         }
+      }
+
+      function shortcutKey(event) {
+        const key = (event.key || "").toLowerCase();
+        if (key) {
+          if (key === " " || key === "spacebar") {
+            return "space";
+          }
+          if (key.length === 1 || key === "enter" || key === "escape" || key === "esc") {
+            return key;
+          }
+        }
+
+        const code = event.keyCode || event.which || event.charCode || 0;
+        const keyCodes = {
+          13: "enter",
+          27: "escape",
+          32: "space",
+          67: "c",
+          76: "l",
+          78: "n",
+          82: "r",
+          83: "s"
+        };
+        return keyCodes[code] || "";
+      }
+
+      document.addEventListener("click", (event) => {
+        const button = event.target.closest("button");
+        activateButton(button);
       });
 
       document.addEventListener("keydown", (event) => {
+        if (quitConfirm.handleKeyDown(event)) {
+          return;
+        }
+
         const active = document.activeElement;
         const activeIndex = navButtons.indexOf(active);
+        const key = shortcutKey(event);
+
         if (event.key === "ArrowDown" && activeIndex >= 0) {
           event.preventDefault();
           navButtons[(activeIndex + 1) % navButtons.length].focus();
+          return;
         }
+
         if (event.key === "ArrowUp" && activeIndex >= 0) {
           event.preventDefault();
           navButtons[(activeIndex + navButtons.length - 1) % navButtons.length].focus();
+          return;
         }
-        if (event.key === "Escape") {
+
+        if (key === "enter" || key === "space") {
+          const focusedButton = active && active.closest ? active.closest("button") : null;
+          if (focusedButton) {
+            event.preventDefault();
+            activateButton(focusedButton);
+          }
+          return;
+        }
+
+        const shortcuts = {
+          c: () => showPanel("continue"),
+          l: () => showPanel("load"),
+          n: () => runCommand("new_game"),
+          s: () => showPanel("settings"),
+          r: () => showPanel("credits"),
+          esc: () => runCommand("quit"),
+          escape: () => runCommand("quit")
+        };
+        if (shortcuts[key]) {
           event.preventDefault();
-          showPanel("home");
+          shortcuts[key]();
         }
       });
 
-      const volumeRange = document.getElementById("volumeRange");
       const volumeValue = document.getElementById("volumeValue");
-      volumeRange.addEventListener("input", () => {
-        const value = Number(volumeRange.value);
-        volumeValue.textContent = `${value}%`;
-        sendNative("set_music_volume", String(value / 100));
+      const volumeDownButton = document.getElementById("volumeDownButton");
+      const volumeUpButton = document.getElementById("volumeUpButton");
+      const muteToggleButton = document.getElementById("muteToggleButton");
+      let menuVolume = 72;
+      let menuMuted = false;
+
+      function updateMenuVolume(value) {
+        menuVolume = Math.max(0, Math.min(100, value));
+        volumeValue.textContent = `${menuVolume}%`;
+        sendNative("set_music_volume", String(menuVolume / 100));
+      }
+
+      function updateMenuMuted(value) {
+        menuMuted = value;
+        muteToggleButton.setAttribute("aria-pressed", menuMuted ? "true" : "false");
+        muteToggleButton.textContent = menuMuted ? "On" : "Off";
+        sendNative("set_music_muted", menuMuted ? "true" : "false");
+      }
+
+      volumeDownButton.addEventListener("click", () => {
+        updateMenuVolume(menuVolume - 8);
       });
 
-      document.getElementById("muteToggle").addEventListener("change", (event) => {
-        sendNative("set_music_muted", event.target.checked ? "true" : "false");
+      volumeUpButton.addEventListener("click", () => {
+        updateMenuVolume(menuVolume + 8);
+      });
+
+      muteToggleButton.addEventListener("click", () => {
+        updateMenuMuted(!menuMuted);
       });
 
       showPanel("home");
