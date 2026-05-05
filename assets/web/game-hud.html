@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="ui.css">
+    <style>
+      body {
+        pointer-events: none;
+      }
+
+      .hud-root {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        padding: var(--space-4);
+      }
+
+      .hud-bar {
+        min-height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+        padding: 0 var(--space-4);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(7, 11, 16, 0.68);
+        box-shadow: 0 14px 34px var(--shadow);
+      }
+
+      .hud-brand {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+      }
+
+      .hud-title {
+        margin: 0;
+        color: var(--ink-high);
+        font-family: var(--font-title);
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+
+      .hud-readouts {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+      }
+
+      .hud-readout {
+        min-width: 96px;
+        padding: var(--space-2) var(--space-3);
+        border: 1px solid rgba(163, 197, 214, 0.16);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .hud-readout span {
+        display: block;
+      }
+
+      .hud-readout .label {
+        color: var(--ink-muted);
+        font-size: 0.74rem;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .hud-readout .value {
+        color: var(--ink-high);
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+
+      .hud-footer {
+        justify-self: end;
+        max-width: 360px;
+        padding: var(--space-3) var(--space-4);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(7, 11, 16, 0.62);
+        color: var(--ink-muted);
+        font-size: 0.9rem;
+        box-shadow: 0 14px 34px var(--shadow);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="hud-root">
+      <header class="hud-bar">
+        <div class="hud-brand">
+          <h1 class="hud-title">SOLARIS</h1>
+          <span class="status-pill" data-tone="ready">Prototype scene</span>
+        </div>
+        <div class="hud-readouts">
+          <div class="hud-readout">
+            <span class="label">View</span>
+            <span class="value">Strategic</span>
+          </div>
+          <div class="hud-readout">
+            <span class="label">Layer</span>
+            <span class="value">Scene test</span>
+          </div>
+          <div class="hud-readout">
+            <span class="label">Input</span>
+            <span class="value">Camera free</span>
+          </div>
+        </div>
+      </header>
+      <div></div>
+      <footer class="hud-footer">Dashboard UI placeholder: current build renders the prototype 3D scene.</footer>
+    </main>
+  </body>
+</html>

@@ -48,7 +48,12 @@ target_link_libraries(
            machina_nvidia_usd
            machina_ultralight)
 
-add_executable(solaris src/game_scene.cpp src/main.cpp)
+add_executable(
+    solaris
+    src/game_scene.cpp
+    src/main.cpp
+    src/main_menu_scene.cpp
+    src/menu_commands.cpp)
 target_link_libraries(solaris PRIVATE machina_engine)
 
 find_program(
@@ -114,6 +119,12 @@ target_link_libraries(machina_scene_stack PRIVATE machina_engine)
 set_target_properties(machina_scene_stack PROPERTIES CXX_CLANG_TIDY "${MACHINA_CLANG_TIDY}")
 
 add_test(NAME scene_stack COMMAND machina_scene_stack)
+
+add_executable(solaris_menu_commands tests/menu_commands.cpp src/menu_commands.cpp)
+target_link_libraries(solaris_menu_commands PRIVATE machina_engine)
+set_target_properties(solaris_menu_commands PROPERTIES CXX_CLANG_TIDY "${MACHINA_CLANG_TIDY}")
+
+add_test(NAME menu_commands COMMAND solaris_menu_commands)
 
 function(machina_copy_assets target)
     add_custom_command(

@@ -1,0 +1,473 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="ui.css">
+    <style>
+      body {
+        background:
+          linear-gradient(90deg, rgba(2, 6, 10, 0.94) 0%, rgba(2, 6, 10, 0.74) 42%, rgba(2, 6, 10, 0.18) 100%),
+          linear-gradient(0deg, rgba(2, 6, 10, 0.92) 0%, rgba(2, 6, 10, 0.1) 46%, rgba(2, 6, 10, 0.8) 100%),
+          url("../graphics/mainmenu.jpg");
+        background-position: center;
+        background-size: cover;
+      }
+
+      .menu-root {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-columns: minmax(320px, 420px) minmax(420px, 760px);
+        align-items: stretch;
+        gap: var(--space-5);
+        padding: var(--space-6);
+      }
+
+      .brand-column,
+      .view-column {
+        min-height: 0;
+      }
+
+      .brand-column {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: var(--space-5);
+      }
+
+      .brand-block {
+        margin-top: var(--space-4);
+      }
+
+      .title {
+        margin: 0;
+        color: var(--ink-high);
+        font-family: var(--font-title);
+        font-size: 4.5rem;
+        font-weight: 600;
+        line-height: 0.95;
+        text-shadow: 0 18px 42px var(--shadow);
+      }
+
+      .subtitle {
+        max-width: 28rem;
+        margin: var(--space-3) 0 0;
+        color: var(--ink-muted);
+        font-size: 1.05rem;
+        line-height: 1.4;
+      }
+
+      .main-nav {
+        display: grid;
+        gap: var(--space-2);
+        max-width: 320px;
+      }
+
+      .nav-button {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 var(--space-4);
+        background: rgba(7, 13, 18, 0.66);
+        text-align: left;
+      }
+
+      .nav-button::after {
+        content: attr(data-key);
+        color: var(--ink-dim);
+        font-size: 0.8rem;
+      }
+
+      .nav-button[data-active="true"] {
+        border-color: var(--line-strong);
+        background: rgba(26, 58, 73, 0.76);
+        color: var(--accent-strong);
+      }
+
+      .primary-action {
+        border-color: rgba(143, 215, 255, 0.52);
+        background: rgba(24, 75, 99, 0.82);
+        color: var(--ink-high);
+        font-weight: 600;
+      }
+
+      .view-column {
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-start;
+      }
+
+      .view-shell {
+        width: min(100%, 720px);
+        max-height: 100%;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--panel);
+        box-shadow: 0 20px 60px var(--shadow);
+      }
+
+      .view-header {
+        min-height: 68px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+        padding: var(--space-4) var(--space-5);
+        border-bottom: 1px solid var(--line);
+        background: rgba(5, 9, 13, 0.64);
+      }
+
+      .view {
+        display: none;
+        min-height: 360px;
+        padding: var(--space-5);
+      }
+
+      .view.is-active {
+        display: block;
+      }
+
+      .view-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-3);
+      }
+
+      .metric-row,
+      .empty-row,
+      .setting-row,
+      .credit-row {
+        min-height: 58px;
+        display: grid;
+        align-items: center;
+        gap: var(--space-1);
+        padding: var(--space-3) var(--space-4);
+        border: 1px solid rgba(163, 197, 214, 0.16);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .row-label {
+        color: var(--ink-high);
+        font-weight: 600;
+      }
+
+      .row-value {
+        color: var(--ink-muted);
+      }
+
+      .setting-row {
+        grid-template-columns: 1fr minmax(160px, 240px);
+      }
+
+      .setting-row input[type="range"] {
+        width: 100%;
+      }
+
+      .setting-row input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        justify-self: end;
+      }
+
+      .setting-row.is-readonly {
+        color: var(--ink-dim);
+      }
+
+      .stack {
+        display: grid;
+        gap: var(--space-3);
+      }
+
+      .view-actions {
+        display: flex;
+        gap: var(--space-3);
+        margin-top: var(--space-4);
+      }
+
+      .view-actions button {
+        min-width: 132px;
+        padding: 0 var(--space-4);
+      }
+
+      .footer-line {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-3);
+        color: var(--ink-dim);
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 980px) {
+        .menu-root {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto 1fr;
+          padding: var(--space-4);
+        }
+
+        .title {
+          font-size: 3rem;
+        }
+
+        .main-nav {
+          max-width: none;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .view-column {
+          align-items: stretch;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="menu-root">
+      <section class="brand-column">
+        <div class="brand-block">
+          <p class="eyebrow">working title / prototype branch</p>
+          <h1 class="title">SOLARIS</h1>
+          <p class="subtitle">A civilization under pressure, built through identity, routes, politics, and consequence.</p>
+        </div>
+
+        <nav class="main-nav" aria-label="Main menu">
+          <button class="nav-button primary-action" id="newGameButton" data-key="Enter" data-command="new_game">New Game</button>
+          <button class="nav-button" data-key="C" data-view="continue">Continue</button>
+          <button class="nav-button" data-key="L" data-view="load">Load</button>
+          <button class="nav-button" data-key="S" data-view="settings">Settings</button>
+          <button class="nav-button" data-key="R" data-view="credits">Credits</button>
+          <button class="nav-button" data-key="Esc" data-command="quit">Quit</button>
+        </nav>
+
+        <div class="footer-line">
+          <span>local build</span>
+          <span class="status-pill" id="nativeStatus" data-tone="ready">Ready</span>
+        </div>
+      </section>
+
+      <section class="view-column">
+        <div class="view-shell">
+          <header class="view-header">
+            <div>
+              <p class="eyebrow" id="viewEyebrow">Command interface</p>
+              <h2 class="panel-title" id="viewTitle">Campaign Entry</h2>
+            </div>
+            <span class="status-pill" id="viewStatus" data-tone="ready">Standing by</span>
+          </header>
+
+          <section class="view is-active" data-panel="home">
+            <div class="view-grid">
+              <div class="metric-row">
+                <span class="row-label">Mode</span>
+                <span class="row-value">Single-player real time with pause</span>
+              </div>
+              <div class="metric-row">
+                <span class="row-label">Primary pressure</span>
+                <span class="row-value">Internal politics</span>
+              </div>
+              <div class="metric-row">
+                <span class="row-label">Interface model</span>
+                <span class="row-value">Galaxy map plus dashboards</span>
+              </div>
+              <div class="metric-row">
+                <span class="row-label">Prototype target</span>
+                <span class="row-value">Current 3D scene</span>
+              </div>
+            </div>
+            <div class="view-actions">
+              <button class="primary-action" data-command="new_game">Start</button>
+              <button data-view="settings">Audio</button>
+            </div>
+          </section>
+
+          <section class="view stack" data-panel="continue">
+            <div class="empty-row">
+              <span class="row-label">No campaign resume point</span>
+              <span class="row-value">Save persistence is not available in this build.</span>
+            </div>
+            <div class="view-actions">
+              <button class="primary-action" data-command="new_game">Start New Game</button>
+              <button data-view="home">Back</button>
+            </div>
+          </section>
+
+          <section class="view stack" data-panel="load">
+            <div class="empty-row">
+              <span class="row-label">No save slots found</span>
+              <span class="row-value">Load slots will appear here when campaign saves exist.</span>
+            </div>
+            <div class="empty-row">
+              <span class="row-label">Storage backend</span>
+              <span class="row-value">Unavailable</span>
+            </div>
+            <div class="view-actions">
+              <button data-view="home">Back</button>
+            </div>
+          </section>
+
+          <section class="view stack" data-panel="settings">
+            <label class="setting-row">
+              <span>
+                <span class="row-label">Menu music volume</span>
+                <span class="row-value" id="volumeValue">72%</span>
+              </span>
+              <input id="volumeRange" type="range" min="0" max="100" value="72">
+            </label>
+            <label class="setting-row">
+              <span>
+                <span class="row-label">Mute menu music</span>
+                <span class="row-value">Session only</span>
+              </span>
+              <input id="muteToggle" type="checkbox">
+            </label>
+            <div class="setting-row is-readonly">
+              <span>
+                <span class="row-label">Display mode</span>
+                <span class="row-value">Controlled by current window setup</span>
+              </span>
+              <span class="row-value">Read-only</span>
+            </div>
+            <div class="setting-row is-readonly">
+              <span>
+                <span class="row-label">Accessibility profile</span>
+                <span class="row-value">Defaults active</span>
+              </span>
+              <span class="row-value">Read-only</span>
+            </div>
+            <div class="view-actions">
+              <button data-view="home">Done</button>
+            </div>
+          </section>
+
+          <section class="view stack" data-panel="credits">
+            <div class="credit-row">
+              <span class="row-label">Design direction</span>
+              <span class="row-value">Civilization identity under systemic pressure</span>
+            </div>
+            <div class="credit-row">
+              <span class="row-label">Engine layer</span>
+              <span class="row-value">raylib, Ultralight, USD, MaterialX</span>
+            </div>
+            <div class="credit-row">
+              <span class="row-label">Fonts</span>
+              <span class="row-value">Orbitron and Titillium Web under OFL</span>
+            </div>
+            <div class="view-actions">
+              <button data-view="home">Back</button>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const viewMeta = {
+        home: ["Command interface", "Campaign Entry", "Standing by"],
+        continue: ["Campaign record", "Continue", "No resume point"],
+        load: ["Campaign archive", "Load", "No save slots"],
+        settings: ["Session controls", "Settings", "Session only"],
+        credits: ["Build record", "Credits", "Local assets"]
+      };
+
+      const statusEl = document.getElementById("viewStatus");
+      const nativeStatusEl = document.getElementById("nativeStatus");
+      const viewTitleEl = document.getElementById("viewTitle");
+      const viewEyebrowEl = document.getElementById("viewEyebrow");
+      const newGameButton = document.getElementById("newGameButton");
+      const newGameButtons = Array.from(document.querySelectorAll('[data-command="new_game"]'));
+      const navButtons = Array.from(document.querySelectorAll(".nav-button"));
+
+      function sendNative(command, payload = "") {
+        if (typeof window.solarisNativeCommand === "function") {
+          window.solarisNativeCommand(command, String(payload));
+        }
+      }
+
+      function setStatus(tone, message) {
+        statusEl.dataset.tone = tone;
+        statusEl.textContent = message;
+        nativeStatusEl.dataset.tone = tone;
+        nativeStatusEl.textContent = message;
+        if (tone === "error") {
+          newGameButtons.forEach((button) => {
+            button.disabled = false;
+          });
+        }
+      }
+
+      window.solarisMenuSetStatus = setStatus;
+
+      function showPanel(panelName) {
+        const meta = viewMeta[panelName] || viewMeta.home;
+        document.querySelectorAll(".view").forEach((panel) => {
+          panel.classList.toggle("is-active", panel.dataset.panel === panelName);
+        });
+        navButtons.forEach((button) => {
+          button.dataset.active = button.dataset.view === panelName ? "true" : "false";
+        });
+        viewEyebrowEl.textContent = meta[0];
+        viewTitleEl.textContent = meta[1];
+        setStatus("ready", meta[2]);
+      }
+
+      function runCommand(command) {
+        if (command === "new_game") {
+          newGameButtons.forEach((button) => {
+            button.disabled = true;
+          });
+          setStatus("loading", "Loading prototype scene");
+        }
+        sendNative(command);
+      }
+
+      document.addEventListener("click", (event) => {
+        const button = event.target.closest("button");
+        if (!button || button.disabled) {
+          return;
+        }
+
+        if (button.dataset.view) {
+          showPanel(button.dataset.view);
+        }
+        if (button.dataset.command) {
+          runCommand(button.dataset.command);
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        const active = document.activeElement;
+        const activeIndex = navButtons.indexOf(active);
+        if (event.key === "ArrowDown" && activeIndex >= 0) {
+          event.preventDefault();
+          navButtons[(activeIndex + 1) % navButtons.length].focus();
+        }
+        if (event.key === "ArrowUp" && activeIndex >= 0) {
+          event.preventDefault();
+          navButtons[(activeIndex + navButtons.length - 1) % navButtons.length].focus();
+        }
+        if (event.key === "Escape") {
+          event.preventDefault();
+          showPanel("home");
+        }
+      });
+
+      const volumeRange = document.getElementById("volumeRange");
+      const volumeValue = document.getElementById("volumeValue");
+      volumeRange.addEventListener("input", () => {
+        const value = Number(volumeRange.value);
+        volumeValue.textContent = `${value}%`;
+        sendNative("set_music_volume", String(value / 100));
+      });
+
+      document.getElementById("muteToggle").addEventListener("change", (event) => {
+        sendNative("set_music_muted", event.target.checked ? "true" : "false");
+      });
+
+      showPanel("home");
+      newGameButton.focus();
+    </script>
+  </body>
+</html>

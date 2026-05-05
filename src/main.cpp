@@ -1,13 +1,9 @@
-#include <solaris/game_scene.hpp>
+#include <solaris/main_menu_scene.hpp>
 
-#include <machina/level_description.hpp>
 #include <machina/renderer.hpp>
 #include <machina/scene.hpp>
-#include <print>
+#include <memory>
 #include <raylib.h>
-#include <string_view>
-#include <utility>
-#include <vector>
 
 extern "C"
 {
@@ -17,15 +13,6 @@ extern "C"
 }
 
 namespace {
-
-void
-PrintDiagnostics(std::string_view label,
-                 const std::vector<machina::Diagnostic>& diagnostics)
-{
-  for (const machina::Diagnostic& diagnostic : diagnostics) {
-    std::println("{}: {}", label, diagnostic.message);
-  }
-}
 
 void
 DrawFps()
@@ -47,17 +34,11 @@ main()
   SetWindowSize(monitorWidth + 1, monitorHeight + 1);
   SetWindowPosition(0, 0);
   SetExitKey(KEY_NULL);
+  InitAudioDevice();
 
   machina::Renderer renderer;
-  GameScene::CreateResult gameScene = GameScene::Create(renderer);
-  if (!gameScene.diagnostics.empty()) {
-    PrintDiagnostics(gameScene.diagnosticLabel, gameScene.diagnostics);
-    CloseWindow();
-    return 1;
-  }
-
   machina::SceneStack scenes;
-  scenes.Push(std::move(gameScene.scene));
+  scenes.Push(std::make_unique<MainMenuScene>(renderer));
   machina::SceneDrawContext drawContext =
     machina::SceneDrawContext{ .renderer = renderer };
   bool showFps = false;
@@ -79,6 +60,7 @@ main()
   }
 
   scenes.Clear();
+  CloseAudioDevice();
   CloseWindow();
   return 0;
 }

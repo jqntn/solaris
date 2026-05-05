@@ -1,5 +1,8 @@
+#include <AppCore/JSHelpers.h>
 #include <AppCore/Platform.h>
 #include <Ultralight/Bitmap.h>
+#include <Ultralight/KeyCodes.h>
+#include <Ultralight/KeyEvent.h>
 #include <Ultralight/Listener.h>
 #include <Ultralight/MouseEvent.h>
 #include <Ultralight/RefPtr.h>
@@ -19,13 +22,13 @@
 #include <raylib.h>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace machina {
 
 namespace {
 
-constexpr std::string_view overlayUrl = "file:///web/poc.html";
 constexpr int scrollPixelsPerWheelStep = 32;
 constexpr std::string_view hitTestScriptPrefix = R"js(
 (function() {
@@ -111,6 +114,97 @@ PointInRect(Vector2 point, int x, int y, int width, int height)
          point.x < static_cast<float>(x + width) &&
          point.y >= static_cast<float>(y) &&
          point.y < static_cast<float>(y + height);
+}
+
+[[nodiscard]] std::string
+ToStdString(const ultralight::String& value)
+{
+  return std::string(value.utf8().data(), value.utf8().length());
+}
+
+[[nodiscard]] bool
+ShiftKeyDown()
+{
+  return IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT);
+}
+
+[[nodiscard]] unsigned
+KeyboardModifiers()
+{
+  unsigned modifiers = 0u;
+  if (IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT)) {
+    modifiers |= ultralight::KeyEvent::kMod_AltKey;
+  }
+  if (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) {
+    modifiers |= ultralight::KeyEvent::kMod_CtrlKey;
+  }
+  if (ShiftKeyDown()) {
+    modifiers |= ultralight::KeyEvent::kMod_ShiftKey;
+  }
+  return modifiers;
+}
+
+[[nodiscard]] int
+UltralightVirtualKey(int raylibKey)
+{
+  if ((raylibKey >= KEY_ZERO && raylibKey <= KEY_NINE) ||
+      (raylibKey >= KEY_A && raylibKey <= KEY_Z)) {
+    return raylibKey;
+  }
+
+  switch (raylibKey) {
+    case KEY_BACKSPACE:
+      return ultralight::KeyCodes::GK_BACK;
+    case KEY_TAB:
+      return ultralight::KeyCodes::GK_TAB;
+    case KEY_ENTER:
+    case KEY_KP_ENTER:
+      return ultralight::KeyCodes::GK_RETURN;
+    case KEY_ESCAPE:
+      return ultralight::KeyCodes::GK_ESCAPE;
+    case KEY_SPACE:
+      return ultralight::KeyCodes::GK_SPACE;
+    case KEY_LEFT:
+      return ultralight::KeyCodes::GK_LEFT;
+    case KEY_UP:
+      return ultralight::KeyCodes::GK_UP;
+    case KEY_RIGHT:
+      return ultralight::KeyCodes::GK_RIGHT;
+    case KEY_DOWN:
+      return ultralight::KeyCodes::GK_DOWN;
+    case KEY_INSERT:
+      return ultralight::KeyCodes::GK_INSERT;
+    case KEY_DELETE:
+      return ultralight::KeyCodes::GK_DELETE;
+    case KEY_HOME:
+      return ultralight::KeyCodes::GK_HOME;
+    case KEY_END:
+      return ultralight::KeyCodes::GK_END;
+    case KEY_PAGE_UP:
+      return ultralight::KeyCodes::GK_PRIOR;
+    case KEY_PAGE_DOWN:
+      return ultralight::KeyCodes::GK_NEXT;
+    default:
+      return 0;
+  }
+}
+
+[[nodiscard]] ultralight::KeyEvent
+MakeKeyEvent(ultralight::KeyEvent::Type type, int raylibKey, int virtualKey)
+{
+  ultralight::KeyEvent event = ultralight::KeyEvent{};
+  event.type = type;
+  event.modifiers = KeyboardModifiers();
+  event.virtual_key_code = virtualKey;
+  event.native_key_code = raylibKey;
+  event.is_keypad = raylibKey == KEY_KP_ENTER ||
+                    (raylibKey >= KEY_KP_0 && raylibKey <= KEY_KP_EQUAL);
+  ultralight::GetKeyIdentifierFromVirtualKeyCode(virtualKey,
+                                                 event.key_identifier);
+  ultralight::GetKeyFromVirtualKeyCode(virtualKey, ShiftKeyDown(), event.text);
+  ultralight::GetKeyFromVirtualKeyCode(
+    virtualKey, false, event.unmodified_text);
+  return event;
 }
 
 [[nodiscard]] ultralight::MouseEvent::Button
@@ -201,14 +295,23 @@ LoadBlankTexture(int width, int height)
 
 }
 
-class WebOverlay::Impl final : public ultralight::ViewListener
+class WebOverlay::Impl final
+  : public ultralight::LoadListener
+  , public ultralight::ViewListener
 {
 public:
-  Impl(int overlayX, int overlayY, int overlayWidth, int overlayHeight)
+  Impl(int overlayX,
+       int overlayY,
+       int overlayWidth,
+       int overlayHeight,
+       std::string overlayPageUrl,
+       WebOverlayCommandHandler overlayCommandHandler)
     : x(overlayX)
     , y(overlayY)
     , width(overlayWidth)
     , height(overlayHeight)
+    , pageUrl(std::move(overlayPageUrl))
+    , commandHandler(std::move(overlayCommandHandler))
     , texture(LoadBlankTexture(overlayWidth, overlayHeight))
     , uploadPixels(static_cast<std::size_t>(overlayWidth * overlayHeight * 4))
   {
@@ -232,14 +335,16 @@ public:
                                 static_cast<std::uint32_t>(height),
                                 viewConfig,
                                 nullptr);
+    view->set_load_listener(this);
     view->set_view_listener(this);
     view->Focus();
-    view->LoadURL(ultralight::String(overlayUrl.data(), overlayUrl.size()));
+    view->LoadURL(ultralight::String(pageUrl.data(), pageUrl.size()));
   }
 
   ~Impl() override
   {
     if (view) {
+      view->set_load_listener(nullptr);
       view->set_view_listener(nullptr);
       view = nullptr;
     }
@@ -262,6 +367,7 @@ public:
       }
 
       ForwardMouseInput(inputCapture.mouse);
+      ForwardKeyboardInput();
       if (!inputCapture.mouse && !AnyCapturedMouseButton()) {
         SetMouseCursor(MOUSE_CURSOR_DEFAULT);
       }
@@ -286,6 +392,14 @@ public:
     EndBlendMode();
   }
 
+  [[nodiscard]] bool EvaluateScript(std::string_view script) const
+  {
+    ultralight::String exception;
+    view->EvaluateScript(ultralight::String(script.data(), script.size()),
+                         &exception);
+    return exception.empty();
+  }
+
   void OnChangeCursor(ultralight::View* caller,
                       ultralight::Cursor cursor) override
   {
@@ -295,7 +409,46 @@ public:
     }
   }
 
+  void OnDOMReady(ultralight::View* caller,
+                  std::uint64_t frameId,
+                  bool isMainFrame,
+                  const ultralight::String& url) override
+  {
+    (void)frameId;
+    (void)url;
+    if (!isMainFrame || !commandHandler) {
+      return;
+    }
+
+    ultralight::RefPtr<ultralight::JSContext> context = caller->LockJSContext();
+    ultralight::SetJSContext(context->ctx());
+    ultralight::JSObject global = ultralight::JSGlobalObject();
+    global["solarisNativeCommand"] =
+      ultralight::JSCallback(std::bind(&WebOverlay::Impl::OnNativeCommand,
+                                       this,
+                                       std::placeholders::_1,
+                                       std::placeholders::_2));
+  }
+
 private:
+  void OnNativeCommand(const ultralight::JSObject& thisObject,
+                       const ultralight::JSArgs& args)
+  {
+    (void)thisObject;
+    if (!commandHandler || args.empty()) {
+      return;
+    }
+
+    const ultralight::String commandString = args[0].ToString();
+    std::string payload;
+    if (args.size() >= 2) {
+      const ultralight::String payloadString = args[1].ToString();
+      payload = ToStdString(payloadString);
+    }
+
+    commandHandler(ToStdString(commandString), std::move(payload));
+  }
+
   [[nodiscard]] WebOverlayInputCapture QueryInputCapture() const
   {
     const Vector2 mousePosition = GetMousePosition();
@@ -417,6 +570,19 @@ private:
     view->FireScrollEvent(scrollEvent);
   }
 
+  void ForwardKeyboardInput()
+  {
+    int raylibKey = GetKeyPressed();
+    while (raylibKey != 0) {
+      const int virtualKey = UltralightVirtualKey(raylibKey);
+      if (virtualKey != 0) {
+        view->FireKeyEvent(MakeKeyEvent(
+          ultralight::KeyEvent::kType_RawKeyDown, raylibKey, virtualKey));
+      }
+      raylibKey = GetKeyPressed();
+    }
+  }
+
   [[nodiscard]] ultralight::MouseEvent::Button CurrentCapturedMouseButton()
     const
   {
@@ -489,6 +655,8 @@ private:
   int y = 0;
   int width = 0;
   int height = 0;
+  std::string pageUrl;
+  WebOverlayCommandHandler commandHandler;
   TextureHandle texture;
   std::vector<std::uint8_t> uploadPixels;
   ultralight::RefPtr<ultralight::Renderer> renderer;
@@ -498,8 +666,18 @@ private:
   bool wasMouseInside = false;
 };
 
-WebOverlay::WebOverlay(int x, int y, int width, int height)
-  : impl(std::make_unique<Impl>(x, y, width, height))
+WebOverlay::WebOverlay(int x,
+                       int y,
+                       int width,
+                       int height,
+                       std::string pageUrl,
+                       WebOverlayCommandHandler commandHandler)
+  : impl(std::make_unique<Impl>(x,
+                                y,
+                                width,
+                                height,
+                                std::move(pageUrl),
+                                std::move(commandHandler)))
 {
 }
 
@@ -509,6 +687,12 @@ WebOverlayInputCapture
 WebOverlay::Update(bool acceptsInput)
 {
   return impl->Update(acceptsInput);
+}
+
+bool
+WebOverlay::EvaluateScript(std::string_view script) const
+{
+  return impl->EvaluateScript(script);
 }
 
 void

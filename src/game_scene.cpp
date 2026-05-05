@@ -21,10 +21,12 @@ SampleScenePath()
 
 GameScene::GameScene(ConstructorTag, entt::registry registry)
   : registry(std::move(registry))
-  , webOverlay(std::make_unique<machina::WebOverlay>(0,
-                                                     0,
-                                                     GetScreenWidth(),
-                                                     GetScreenHeight()))
+  , webOverlay(
+      std::make_unique<machina::WebOverlay>(0,
+                                            0,
+                                            GetScreenWidth(),
+                                            GetScreenHeight(),
+                                            "file:///web/game-hud.html"))
 {
 }
 
