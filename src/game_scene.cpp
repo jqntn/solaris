@@ -4,6 +4,7 @@
 #include <machina/level_instantiator.hpp>
 #include <machina/materialx_shader_generator.hpp>
 #include <machina/renderer.hpp>
+#include <machina/runtime_paths.hpp>
 #include <machina/usd_level_loader.hpp>
 #include <raylib.h>
 #include <utility>
@@ -13,8 +14,7 @@ namespace {
 std::filesystem::path
 SampleScenePath()
 {
-  return std::filesystem::current_path() / MACHINA_ASSETS_ROOT / "scenes" /
-         "suzannes.usda";
+  return machina::RuntimeAssetPath() / "scenes" / "suzannes.usda";
 }
 
 }
@@ -41,7 +41,7 @@ GameScene::Create(machina::Renderer& renderer)
   }
 
   machina::MaterialXShaderGenerator shaderGenerator(
-    std::filesystem::current_path() / MACHINA_MATERIALX_LIBRARY_ROOT);
+    machina::RuntimeMaterialXPath());
   std::vector<machina::Diagnostic> diagnostics =
     renderer.Load(level, shaderGenerator);
   if (!diagnostics.empty()) {

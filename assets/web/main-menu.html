@@ -113,33 +113,33 @@
       }
 
       .view {
-        display: none;
+        display: block;
         min-height: 360px;
         padding: var(--space-5);
       }
 
-      .view.is-active {
+      .detail-list {
         display: block;
       }
 
-      .view-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: var(--space-3);
-      }
-
-      .metric-row,
-      .empty-row,
-      .setting-row,
-      .credit-row {
+      .detail-row {
         min-height: 58px;
-        display: grid;
+        display: flex;
         align-items: center;
-        gap: var(--space-1);
+        justify-content: space-between;
+        gap: var(--space-3);
         padding: var(--space-3) var(--space-4);
         border: 1px solid rgba(163, 197, 214, 0.16);
         border-radius: var(--radius);
         background: rgba(255, 255, 255, 0.035);
+      }
+
+      .detail-row + .detail-row {
+        margin-top: var(--space-3);
+      }
+
+      .detail-row > span:last-child {
+        text-align: right;
       }
 
       .row-label {
@@ -149,10 +149,6 @@
 
       .row-value {
         color: var(--ink-muted);
-      }
-
-      .setting-row {
-        grid-template-columns: 1fr minmax(160px, 240px);
       }
 
       .setting-control {
@@ -172,13 +168,8 @@
         color: var(--confirm);
       }
 
-      .setting-row.is-readonly {
+      .detail-row.is-readonly {
         color: var(--ink-dim);
-      }
-
-      .stack {
-        display: grid;
-        gap: var(--space-3);
       }
 
       .view-actions {
@@ -190,6 +181,10 @@
       .view-actions button {
         min-width: 132px;
         padding: 0 var(--space-4);
+      }
+
+      .view-actions button[aria-hidden="true"] {
+        visibility: hidden;
       }
 
       .footer-line {
@@ -268,12 +263,12 @@
         </div>
 
         <nav class="main-nav" aria-label="Main menu">
-          <button class="nav-button primary-action" id="newGameButton" data-key="N" data-command="new_game">New Game</button>
+          <button class="nav-button primary-action" id="newGameButton" data-key="N" data-view="home" data-command="new_game">New Game</button>
           <button class="nav-button" data-key="C" data-view="continue">Continue</button>
           <button class="nav-button" data-key="L" data-view="load">Load</button>
           <button class="nav-button" data-key="S" data-view="settings">Settings</button>
           <button class="nav-button" data-key="R" data-view="credits">Credits</button>
-          <button class="nav-button" data-key="Esc" data-command="quit">Quit</button>
+          <button class="nav-button" data-key="Esc" data-view="quit" data-command="quit">Quit</button>
         </nav>
 
         <div class="footer-line">
@@ -292,108 +287,30 @@
             <span class="status-pill" id="viewStatus" data-tone="ready">Standing by</span>
           </header>
 
-          <section class="view is-active" data-panel="home">
-            <div class="view-grid">
-              <div class="metric-row">
-                <span class="row-label">Mode</span>
-                <span class="row-value">Single-player real time with pause</span>
+          <section class="view" id="detailView">
+            <div class="detail-list">
+              <div class="detail-row">
+                <span class="row-label" id="detailRow1Label">Mode</span>
+                <span class="row-value" id="detailRow1Value">Single-player real time with pause</span>
               </div>
-              <div class="metric-row">
-                <span class="row-label">Primary pressure</span>
-                <span class="row-value">Internal politics</span>
+              <div class="detail-row">
+                <span class="row-label" id="detailRow2Label">Primary pressure</span>
+                <span class="row-value" id="detailRow2Value">Internal politics</span>
               </div>
-              <div class="metric-row">
-                <span class="row-label">Interface model</span>
-                <span class="row-value">Galaxy map plus dashboards</span>
+              <div class="detail-row">
+                <span class="row-label" id="detailRow3Label">Interface model</span>
+                <span class="row-value" id="detailRow3Value">Galaxy map plus dashboards</span>
               </div>
-              <div class="metric-row">
-                <span class="row-label">Prototype target</span>
-                <span class="row-value">Current 3D scene</span>
+              <div class="detail-row">
+                <span class="row-label" id="detailRow4Label">Prototype target</span>
+                <span class="row-value" id="detailRow4Value">Current 3D scene</span>
               </div>
             </div>
             <div class="view-actions">
-              <button class="primary-action" data-command="new_game">Start</button>
-              <button data-view="settings">Audio</button>
-            </div>
-          </section>
-
-          <section class="view stack" data-panel="continue">
-            <div class="empty-row">
-              <span class="row-label">No campaign resume point</span>
-              <span class="row-value">Save persistence is not available in this build.</span>
-            </div>
-            <div class="view-actions">
-              <button class="primary-action" data-command="new_game">Start New Game</button>
-              <button data-view="home">Back</button>
-            </div>
-          </section>
-
-          <section class="view stack" data-panel="load">
-            <div class="empty-row">
-              <span class="row-label">No save slots found</span>
-              <span class="row-value">Load slots will appear here when campaign saves exist.</span>
-            </div>
-            <div class="empty-row">
-              <span class="row-label">Storage backend</span>
-              <span class="row-value">Unavailable</span>
-            </div>
-            <div class="view-actions">
-              <button data-view="home">Back</button>
-            </div>
-          </section>
-
-          <section class="view stack" data-panel="settings">
-            <div class="setting-row">
-              <span>
-                <span class="row-label">Menu music volume</span>
-                <span class="row-value" id="volumeValue">72%</span>
-              </span>
-              <span class="setting-control" role="group" aria-label="Menu music volume">
-                <button class="step-button" id="volumeDownButton" type="button" aria-label="Lower menu music volume">-</button>
-                <button class="step-button" id="volumeUpButton" type="button" aria-label="Raise menu music volume">+</button>
-              </span>
-            </div>
-            <div class="setting-row">
-              <span>
-                <span class="row-label">Mute menu music</span>
-                <span class="row-value">Session only</span>
-              </span>
-              <button class="toggle-button" id="muteToggleButton" type="button" aria-pressed="false">Off</button>
-            </div>
-            <div class="setting-row is-readonly">
-              <span>
-                <span class="row-label">Display mode</span>
-                <span class="row-value">Controlled by current window setup</span>
-              </span>
-              <span class="row-value">Read-only</span>
-            </div>
-            <div class="setting-row is-readonly">
-              <span>
-                <span class="row-label">Accessibility profile</span>
-                <span class="row-value">Defaults active</span>
-              </span>
-              <span class="row-value">Read-only</span>
-            </div>
-            <div class="view-actions">
-              <button data-view="home">Done</button>
-            </div>
-          </section>
-
-          <section class="view stack" data-panel="credits">
-            <div class="credit-row">
-              <span class="row-label">Design direction</span>
-              <span class="row-value">Civilization identity under systemic pressure</span>
-            </div>
-            <div class="credit-row">
-              <span class="row-label">Engine layer</span>
-              <span class="row-value">raylib, Ultralight, USD, MaterialX</span>
-            </div>
-            <div class="credit-row">
-              <span class="row-label">Fonts</span>
-              <span class="row-value">Orbitron and Titillium Web under OFL</span>
-            </div>
-            <div class="view-actions">
-              <button data-view="home">Back</button>
+              <button id="detailAction1" type="button"></button>
+              <button id="detailAction2" type="button"></button>
+              <button id="detailAction3" type="button"></button>
+              <button id="detailAction4" type="button"></button>
             </div>
           </section>
         </div>
@@ -423,21 +340,28 @@
 
     <script src="ui.js"></script>
     <script>
-      const viewMeta = {
-        home: ["Command interface", "Campaign Entry", "Standing by"],
-        continue: ["Campaign record", "Continue", "No resume point"],
-        load: ["Campaign archive", "Load", "No save slots"],
-        settings: ["Session controls", "Settings", "Session only"],
-        credits: ["Build record", "Credits", "Local assets"]
-      };
-
       const statusEl = document.getElementById("viewStatus");
       const nativeStatusEl = document.getElementById("nativeStatus");
       const viewTitleEl = document.getElementById("viewTitle");
       const viewEyebrowEl = document.getElementById("viewEyebrow");
       const newGameButton = document.getElementById("newGameButton");
-      const newGameButtons = Array.from(document.querySelectorAll('[data-command="new_game"]'));
       const navButtons = Array.from(document.querySelectorAll(".nav-button"));
+      const detailRows = [
+        [document.getElementById("detailRow1Label"), document.getElementById("detailRow1Value")],
+        [document.getElementById("detailRow2Label"), document.getElementById("detailRow2Value")],
+        [document.getElementById("detailRow3Label"), document.getElementById("detailRow3Value")],
+        [document.getElementById("detailRow4Label"), document.getElementById("detailRow4Value")]
+      ];
+      const detailActions = [
+        document.getElementById("detailAction1"),
+        document.getElementById("detailAction2"),
+        document.getElementById("detailAction3"),
+        document.getElementById("detailAction4")
+      ];
+      let activePanel = "home";
+      let menuVolume = 72;
+      let menuMuted = false;
+
       const quitConfirm = window.solarisUi.createConfirmDialog({
         modal: document.getElementById("quitConfirm"),
         cancelButton: document.getElementById("cancelQuitButton"),
@@ -459,7 +383,7 @@
         nativeStatusEl.dataset.tone = tone;
         nativeStatusEl.textContent = message;
         if (tone === "error") {
-          newGameButtons.forEach((button) => {
+          document.querySelectorAll('[data-command="new_game"]').forEach((button) => {
             button.disabled = false;
           });
         }
@@ -467,17 +391,147 @@
 
       window.solarisMenuSetStatus = setStatus;
 
+      function panelContent(panelName) {
+        if (panelName === "continue") {
+          return {
+            name: "continue",
+            meta: ["Campaign record", "Continue", "No resume point"],
+            rows: [
+              ["Resume point", "No campaign resume point"],
+              ["Save persistence", "Unavailable in this build"],
+              ["Available action", "Start a new prototype session"],
+              ["Prototype target", "Current 3D scene"]
+            ],
+            actions: [
+              { label: "Start New Game", command: "new_game", primary: true },
+              { label: "Back", view: "home" }
+            ]
+          };
+        }
+
+        if (panelName === "load") {
+          return {
+            name: "load",
+            meta: ["Campaign archive", "Load", "No save slots"],
+            rows: [
+              ["Save slots", "No save slots found"],
+              ["Storage backend", "Unavailable"],
+              ["Expected state", "Slots will appear when campaign saves exist"],
+              ["Available action", "Start a new prototype session"]
+            ],
+            actions: [
+              { label: "Back", view: "home" }
+            ]
+          };
+        }
+
+        if (panelName === "settings") {
+          return {
+            name: "settings",
+            meta: ["Session controls", "Settings", "Session only"],
+            rows: [
+              ["Menu music volume", `${menuVolume}%`],
+              ["Mute menu music", menuMuted ? "On" : "Off"],
+              ["Display mode", "Read-only"],
+              ["Accessibility profile", "Defaults active"]
+            ],
+            actions: [
+              { label: "Volume -", action: "volume_down" },
+              { label: "Volume +", action: "volume_up" },
+              { label: menuMuted ? "Unmute" : "Mute", action: "toggle_mute" },
+              { label: "Done", view: "home", primary: true }
+            ]
+          };
+        }
+
+        if (panelName === "credits") {
+          return {
+            name: "credits",
+            meta: ["Build record", "Credits", "Local assets"],
+            rows: [
+              ["Design direction", "Civilization identity under systemic pressure"],
+              ["Engine layer", "raylib, Ultralight, USD, MaterialX"],
+              ["Fonts", "Orbitron and Titillium Web under OFL"],
+              ["UI references", "X4 Foundations and Stellaris"]
+            ],
+            actions: [
+              { label: "Back", view: "home" }
+            ]
+          };
+        }
+
+        if (panelName === "quit") {
+          return {
+            name: "quit",
+            meta: ["Exit command", "Quit", "Confirmation required"],
+            rows: [
+              ["Exit command", "Confirmation required"],
+              ["Session state", "No persistent save backend in this build"],
+              ["Result", "Close the application"],
+              ["Available action", "Cancel or confirm"]
+            ],
+            actions: [
+              { label: "Quit", command: "quit", primary: true },
+              { label: "Cancel", view: "home" }
+            ]
+          };
+        }
+
+        return {
+          name: "home",
+          meta: ["Command interface", "Campaign Entry", "Standing by"],
+          rows: [
+            ["Mode", "Single-player real time with pause"],
+            ["Primary pressure", "Internal politics"],
+            ["Interface model", "Galaxy map plus dashboards"],
+            ["Prototype target", "Current 3D scene"]
+          ],
+          actions: [
+            { label: "Start", command: "new_game", primary: true },
+            { label: "Audio", view: "settings" }
+          ]
+        };
+      }
+
       function showPanel(panelName) {
-        const meta = viewMeta[panelName] || viewMeta.home;
-        document.querySelectorAll(".view").forEach((panel) => {
-          panel.classList.toggle("is-active", panel.dataset.panel === panelName);
-        });
+        const content = panelContent(panelName);
+        activePanel = content.name;
         navButtons.forEach((button) => {
-          button.dataset.active = button.dataset.view === panelName ? "true" : "false";
+          button.dataset.active = button.dataset.view === content.name ? "true" : "false";
         });
-        viewEyebrowEl.textContent = meta[0];
-        viewTitleEl.textContent = meta[1];
-        setStatus("ready", meta[2]);
+        detailRows.forEach((row, index) => {
+          row[0].textContent = content.rows[index][0];
+          row[1].textContent = content.rows[index][1];
+        });
+        detailActions.forEach((button, index) => {
+          const action = content.actions[index];
+          button.removeAttribute("data-action");
+          button.removeAttribute("data-command");
+          button.removeAttribute("data-view");
+          button.classList.toggle("primary-action", !!(action && action.primary));
+          if (!action) {
+            button.textContent = "";
+            button.disabled = true;
+            button.setAttribute("aria-hidden", "true");
+            return;
+          }
+
+          button.textContent = action.label;
+          button.disabled = false;
+          button.removeAttribute("aria-hidden");
+          if (action.action) {
+            button.dataset.action = action.action;
+          }
+          if (action.command) {
+            button.dataset.command = action.command;
+          }
+          if (action.view) {
+            button.dataset.view = action.view;
+          }
+        });
+        viewEyebrowEl.textContent = content.meta[0];
+        viewTitleEl.textContent = content.meta[1];
+        setStatus("ready", content.meta[2]);
       }
 
       function runCommand(command) {
@@ -486,7 +540,7 @@
           return;
         }
         if (command === "new_game") {
-          newGameButtons.forEach((button) => {
+          document.querySelectorAll('[data-command="new_game"]').forEach((button) => {
             button.disabled = true;
           });
           setStatus("loading", "Loading prototype scene");
@@ -494,11 +548,40 @@
         sendNative(command);
       }
 
+      function updateMenuVolume(value) {
+        menuVolume = Math.max(0, Math.min(100, value));
+        sendNative("set_music_volume", String(menuVolume / 100));
+        if (activePanel === "settings") {
+          showPanel("settings");
+        }
+      }
+
+      function updateMenuMuted(value) {
+        menuMuted = value;
+        sendNative("set_music_muted", menuMuted ? "true" : "false");
+        if (activePanel === "settings") {
+          showPanel("settings");
+        }
+      }
+
+      function runAction(action) {
+        if (action === "volume_down") {
+          updateMenuVolume(menuVolume - 8);
+        } else if (action === "volume_up") {
+          updateMenuVolume(menuVolume + 8);
+        } else if (action === "toggle_mute") {
+          updateMenuMuted(!menuMuted);
+        }
+      }
+
       function activateButton(button) {
         if (!button || button.disabled) {
           return;
         }
 
+        if (button.dataset.action) {
+          runAction(button.dataset.action);
+        }
         if (button.dataset.view) {
           showPanel(button.dataset.view);
         }
@@ -532,9 +615,10 @@
         return keyCodes[code] || "";
       }
 
-      document.addEventListener("click", (event) => {
-        const button = event.target.closest("button");
-        activateButton(button);
+      document.querySelectorAll("button").forEach((button) => {
+        button.addEventListener("click", () => {
+          activateButton(button);
+        });
       });
 
       document.addEventListener("keydown", (event) => {
@@ -559,7 +643,7 @@
         }
 
         if (key === "enter" || key === "space") {
-          const focusedButton = active && active.closest ? active.closest("button") : null;
+          const focusedButton = active && active.tagName === "BUTTON" ? active : null;
           if (focusedButton) {
             event.preventDefault();
             activateButton(focusedButton);
@@ -580,38 +664,6 @@
           event.preventDefault();
           shortcuts[key]();
         }
-      });
-
-      const volumeValue = document.getElementById("volumeValue");
-      const volumeDownButton = document.getElementById("volumeDownButton");
-      const volumeUpButton = document.getElementById("volumeUpButton");
-      const muteToggleButton = document.getElementById("muteToggleButton");
-      let menuVolume = 72;
-      let menuMuted = false;
-
-      function updateMenuVolume(value) {
-        menuVolume = Math.max(0, Math.min(100, value));
-        volumeValue.textContent = `${menuVolume}%`;
-        sendNative("set_music_volume", String(menuVolume / 100));
-      }
-
-      function updateMenuMuted(value) {
-        menuMuted = value;
-        muteToggleButton.setAttribute("aria-pressed", menuMuted ? "true" : "false");
-        muteToggleButton.textContent = menuMuted ? "On" : "Off";
-        sendNative("set_music_muted", menuMuted ? "true" : "false");
-      }
-
-      volumeDownButton.addEventListener("click", () => {
-        updateMenuVolume(menuVolume - 8);
-      });
-
-      volumeUpButton.addEventListener("click", () => {
-        updateMenuVolume(menuVolume + 8);
-      });
-
-      muteToggleButton.addEventListener("click", () => {
-        updateMenuMuted(!menuMuted);
       });
 
       showPanel("home");

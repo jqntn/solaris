@@ -156,7 +156,9 @@ button[disabled],
 }
 
 .ui-modal.is-active {
-  display: grid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ui-dialog {
@@ -173,9 +175,11 @@ button[disabled],
 }
 
 .ui-dialog-body {
-  display: grid;
-  gap: var(--space-3);
   padding: var(--space-5);
+}
+
+.ui-dialog-body .body-copy {
+  margin-bottom: var(--space-3);
 }
 
 .ui-dialog-actions {

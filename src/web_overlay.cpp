@@ -17,6 +17,8 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <filesystem>
+#include <machina/runtime_paths.hpp>
 #include <machina/web_overlay.hpp>
 #include <memory>
 #include <raylib.h>
@@ -326,8 +328,9 @@ public:
     ultralight::Platform::instance().set_config(config);
     ultralight::Platform::instance().set_font_loader(
       ultralight::GetPlatformFontLoader());
+    const std::string assetPath = RuntimeAssetPath().string();
     ultralight::Platform::instance().set_file_system(
-      ultralight::GetPlatformFileSystem("./assets"));
+      ultralight::GetPlatformFileSystem(assetPath.c_str()));
     ultralight::Platform::instance().set_logger(
       ultralight::GetDefaultLogger("ultralight.log"));
 

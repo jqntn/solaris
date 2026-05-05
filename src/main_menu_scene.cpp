@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <machina/renderer.hpp>
+#include <machina/runtime_paths.hpp>
 #include <solaris/game_scene.hpp>
 #include <solaris/menu_commands.hpp>
 #include <string>
@@ -14,8 +15,7 @@ namespace {
 [[nodiscard]] std::filesystem::path
 MainMenuMusicPath()
 {
-  return std::filesystem::current_path() / MACHINA_ASSETS_ROOT / "sounds" /
-         "mainmenu.ogg";
+  return machina::RuntimeAssetPath() / "sounds" / "mainmenu.ogg";
 }
 
 [[nodiscard]] std::string

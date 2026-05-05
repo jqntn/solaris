@@ -26,6 +26,7 @@ set(MACHINA_ENGINE_SOURCES
     src/level_instantiator.cpp
     src/materialx_shader_generator.cpp
     src/renderer.cpp
+    src/runtime_paths.cpp
     src/scene.cpp
     src/strategic_camera_controller.cpp
     src/usd_level_loader.cpp
