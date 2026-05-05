@@ -6,6 +6,7 @@
 #include <machina/materialx_shader_generator.hpp>
 #include <memory>
 #include <raylib.h>
+#include <raymath.h>
 #include <vector>
 
 namespace machina {
@@ -17,13 +18,13 @@ struct UploadedMaterialUniform
 {
   int location = -1;
   int uniformType = 0;
-  std::array<float, 4> floatValues = {};
-  std::array<int, 4> intValues = {};
+  std::array<float, 4> floatValues = std::array<float, 4>{};
+  std::array<int, 4> intValues = std::array<int, 4>{};
 };
 
 struct UploadedMaterial
 {
-  Material material = {};
+  Material material = Material{};
   std::vector<UploadedMaterialUniform> parameterUniforms;
   int viewPositionLocation = -1;
   int envRadianceLocation = -1;
@@ -44,9 +45,20 @@ public:
   [[nodiscard]] std::vector<Diagnostic> Load(
     const LevelDescription& level,
     const MaterialXShaderGenerator& generator);
-  void Draw(entt::registry& registry, const Camera& camera) const;
+  void BeginFrame();
+  void Submit(entt::registry& registry, const Camera& camera);
+  void Flush();
+  void Draw(entt::registry& registry, const Camera& camera);
 
 private:
+  struct DrawCommand
+  {
+    Camera camera = Camera{};
+    const Mesh* mesh = nullptr;
+    const UploadedMaterial* material = nullptr;
+    Matrix modelMatrix = MatrixIdentity();
+  };
+
   struct ShaderDeleter
   {
     void operator()(Shader* shader) const noexcept;
@@ -70,6 +82,7 @@ private:
   std::vector<ShaderHandle> shaders;
   std::vector<MeshHandle> meshes;
   std::vector<MaterialHandle> materials;
+  std::vector<DrawCommand> drawCommands;
 };
 
 }

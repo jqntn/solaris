@@ -1,6 +1,7 @@
 #include <solaris/game_scene.hpp>
 
 #include <machina/level_description.hpp>
+#include <machina/renderer.hpp>
 #include <machina/scene.hpp>
 #include <print>
 #include <raylib.h>
@@ -26,6 +27,12 @@ PrintDiagnostics(std::string_view label,
   }
 }
 
+void
+DrawFps()
+{
+  DrawText(TextFormat("%d", GetFPS()), 8, 4, 30, GREEN);
+}
+
 }
 
 int
@@ -41,7 +48,8 @@ main()
   SetWindowPosition(0, 0);
   SetExitKey(KEY_NULL);
 
-  GameScene::CreateResult gameScene = GameScene::Create();
+  machina::Renderer renderer;
+  GameScene::CreateResult gameScene = GameScene::Create(renderer);
   if (!gameScene.diagnostics.empty()) {
     PrintDiagnostics(gameScene.diagnosticLabel, gameScene.diagnostics);
     CloseWindow();
@@ -50,12 +58,23 @@ main()
 
   machina::SceneStack scenes;
   scenes.Push(std::move(gameScene.scene));
+  machina::SceneDrawContext drawContext =
+    machina::SceneDrawContext{ .renderer = renderer };
+  bool showFps = false;
 
   while (!WindowShouldClose() && !scenes.ShouldQuit()) {
+    showFps = showFps != IsKeyPressed(KEY_F1);
     scenes.Update();
+    renderer.BeginFrame();
 
     BeginDrawing();
-    scenes.Draw();
+    ClearBackground(Color{ 63, 63, 63, 255 });
+    scenes.Draw(drawContext);
+    renderer.Flush();
+    scenes.DrawUi();
+    if (showFps) {
+      DrawFps();
+    }
     EndDrawing();
   }
 

@@ -29,8 +29,8 @@ struct StrategicCameraInput
   float frameTime = 0.0f;
   int screenWidth = 0;
   int screenHeight = 0;
-  Vector2 mousePosition = {};
-  Vector2 mouseDelta = {};
+  Vector2 mousePosition = Vector2{};
+  Vector2 mouseDelta = Vector2{};
   float mouseWheel = 0.0f;
   float panRight = 0.0f;
   float panForward = 0.0f;
@@ -71,8 +71,8 @@ public:
 
 private:
   StrategicCameraSettings settings;
-  Vector3 target = {};
-  Vector3 desiredTarget = {};
+  Vector3 target = Vector3{};
+  Vector3 desiredTarget = Vector3{};
   float distance = 0.0f;
   float desiredDistance = 0.0f;
   float yawDegrees = 0.0f;

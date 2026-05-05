@@ -6,7 +6,13 @@
 
 namespace machina {
 
+class Renderer;
 class SceneStack;
+
+struct SceneDrawContext
+{
+  Renderer& renderer;
+};
 
 class Scene
 {
@@ -14,7 +20,8 @@ public:
   virtual ~Scene() = default;
 
   virtual void Update(SceneStack& scenes) = 0;
-  virtual void Draw() = 0;
+  virtual void Draw(SceneDrawContext& context) = 0;
+  virtual void DrawUi() = 0;
 };
 
 class SceneStack
@@ -26,7 +33,8 @@ public:
   void Clear();
 
   void Update();
-  void Draw();
+  void Draw(SceneDrawContext& context);
+  void DrawUi();
 
   [[nodiscard]] bool Empty() const;
   [[nodiscard]] std::size_t Size() const;

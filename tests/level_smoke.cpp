@@ -298,9 +298,9 @@ main()
     return Fail("expected duplicated face-varying normals to stay flat");
   }
 
-  if (!Same(flatFirst.normal, { 1.0f, 0.0f, 0.0f }) ||
-      !Same(flatSecond.normal, { 1.0f, 0.0f, 0.0f }) ||
-      !Same(flatThird.normal, { 1.0f, 0.0f, 0.0f })) {
+  if (!Same(flatFirst.normal, machina::Vec3{ 1.0f, 0.0f, 0.0f }) ||
+      !Same(flatSecond.normal, machina::Vec3{ 1.0f, 0.0f, 0.0f }) ||
+      !Same(flatThird.normal, machina::Vec3{ 1.0f, 0.0f, 0.0f })) {
     return Fail("expected flat face-varying normals to be preserved");
   }
 
@@ -315,9 +315,9 @@ main()
     return Fail("expected distinct face-varying normals to stay smooth");
   }
 
-  if (!Same(smoothFirst.normal, { 0.0f, 1.0f, 0.0f }) ||
-      !Same(smoothSecond.normal, { 0.0f, 0.0f, 1.0f }) ||
-      !Same(smoothThird.normal, { 1.0f, 0.0f, 0.0f })) {
+  if (!Same(smoothFirst.normal, machina::Vec3{ 0.0f, 1.0f, 0.0f }) ||
+      !Same(smoothSecond.normal, machina::Vec3{ 0.0f, 0.0f, 1.0f }) ||
+      !Same(smoothThird.normal, machina::Vec3{ 1.0f, 0.0f, 0.0f })) {
     return Fail("expected smooth face-varying normals to be preserved");
   }
 
@@ -327,28 +327,29 @@ main()
     primvarNormalMesh->vertices[primvarNormalMesh->indices[1]];
   const machina::MeshVertex& primvarThird =
     primvarNormalMesh->vertices[primvarNormalMesh->indices[2]];
-  if (!Same(primvarFirst.normal, { 0.0f, 0.0f, 1.0f }) ||
-      !Same(primvarSecond.normal, { 0.0f, 1.0f, 0.0f }) ||
-      !Same(primvarThird.normal, { 1.0f, 0.0f, 0.0f })) {
+  if (!Same(primvarFirst.normal, machina::Vec3{ 0.0f, 0.0f, 1.0f }) ||
+      !Same(primvarSecond.normal, machina::Vec3{ 0.0f, 1.0f, 0.0f }) ||
+      !Same(primvarThird.normal, machina::Vec3{ 1.0f, 0.0f, 0.0f })) {
     return Fail("expected indexed primvars:normals to override mesh normals");
   }
 
-  const Matrix translated = machina::RaylibMatrixFromTransform({ 1.0f,
-                                                                 0.0f,
-                                                                 0.0f,
-                                                                 0.0f,
-                                                                 0.0f,
-                                                                 1.0f,
-                                                                 0.0f,
-                                                                 0.0f,
-                                                                 0.0f,
-                                                                 0.0f,
-                                                                 1.0f,
-                                                                 0.0f,
-                                                                 2.0f,
-                                                                 3.0f,
-                                                                 4.0f,
-                                                                 1.0f });
+  const Matrix translated =
+    machina::RaylibMatrixFromTransform(std::array<float, 16>{ 1.0f,
+                                                              0.0f,
+                                                              0.0f,
+                                                              0.0f,
+                                                              0.0f,
+                                                              1.0f,
+                                                              0.0f,
+                                                              0.0f,
+                                                              0.0f,
+                                                              0.0f,
+                                                              1.0f,
+                                                              0.0f,
+                                                              2.0f,
+                                                              3.0f,
+                                                              4.0f,
+                                                              1.0f });
   const Vector3 transformed =
     Vector3Transform(Vector3{ 1.0f, 1.0f, 1.0f }, translated);
   if (!Near(transformed.x, 3.0f) || !Near(transformed.y, 4.0f) ||

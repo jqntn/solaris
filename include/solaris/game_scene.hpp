@@ -2,7 +2,6 @@
 
 #include <entt/entt.hpp>
 #include <machina/level_description.hpp>
-#include <machina/renderer.hpp>
 #include <machina/scene.hpp>
 #include <machina/strategic_camera_controller.hpp>
 #include <machina/web_overlay.hpp>
@@ -20,18 +19,22 @@ public:
     std::vector<machina::Diagnostic> diagnostics;
   };
 
-  [[nodiscard]] static CreateResult Create();
-
-  void Update(machina::SceneStack& scenes) override;
-  void Draw() override;
+  [[nodiscard]] static CreateResult Create(machina::Renderer& renderer);
 
 private:
-  GameScene(machina::Renderer renderer, entt::registry registry);
+  struct ConstructorTag
+  {};
 
-  machina::Renderer renderer;
+public:
+  GameScene(ConstructorTag, entt::registry registry);
+
+  void Update(machina::SceneStack& scenes) override;
+  void Draw(machina::SceneDrawContext& context) override;
+  void DrawUi() override;
+
+private:
   entt::registry registry;
   std::unique_ptr<machina::WebOverlay> webOverlay;
   machina::StrategicCameraController cameraController;
-  Camera camera = {};
-  bool showFps = false;
+  Camera camera = Camera{};
 };

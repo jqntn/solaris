@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <entt/entt.hpp>
+#include <functional>
 #include <machina/ecs.hpp>
 #include <machina/level_description.hpp>
 #include <machina/materialx_shader_generator.hpp>
@@ -23,10 +24,10 @@ namespace machina {
 Matrix
 RaylibMatrixFromTransform(const std::array<float, 16>& transform)
 {
-  return { transform[0], transform[4], transform[8],  transform[12],
-           transform[1], transform[5], transform[9],  transform[13],
-           transform[2], transform[6], transform[10], transform[14],
-           transform[3], transform[7], transform[11], transform[15] };
+  return Matrix{ transform[0], transform[4], transform[8],  transform[12],
+                 transform[1], transform[5], transform[9],  transform[13],
+                 transform[2], transform[6], transform[10], transform[14],
+                 transform[3], transform[7], transform[11], transform[15] };
 }
 
 namespace {
@@ -34,13 +35,6 @@ namespace {
 constexpr int environmentRadianceMapSlot = MATERIAL_MAP_HEIGHT;
 constexpr int environmentIrradianceMapSlot = MATERIAL_MAP_BRDF;
 constexpr std::string_view materialShaderName = "material_shader";
-
-struct DrawCommand
-{
-  std::size_t mesh = 0;
-  std::size_t material = 0;
-  Matrix modelMatrix = MatrixIdentity();
-};
 
 unsigned char
 ColorByte(float value)
@@ -236,7 +230,7 @@ ConfigureShader(Shader& shader)
 UploadedMaterial
 MakeUploadedMaterial(Material material)
 {
-  UploadedMaterial uploaded = {};
+  UploadedMaterial uploaded = UploadedMaterial{};
   uploaded.material = material;
   uploaded.viewPositionLocation =
     GetShaderLocation(material.shader, "u_viewPosition");
@@ -271,13 +265,14 @@ MakeUploadedMaterialUniforms(const Shader& shader,
   std::vector<UploadedMaterialUniform> uniforms;
 
   for (const MaterialInput& input : material.inputs) {
-    UploadedMaterialUniform uniform = {};
+    UploadedMaterialUniform uniform = UploadedMaterialUniform{};
     uniform.location =
       GetShaderLocation(shader, MaterialUniformName(input).c_str());
     if (!ConfigureUniformValue(input, uniform)) {
-      diagnostics.push_back({ "Material " + material.path +
-                              " has unsupported or invalid input " +
-                              input.name + " of type " + input.type });
+      diagnostics.push_back(Diagnostic{
+        "Material " + material.path + " has unsupported or invalid input " +
+          input.name + " of type " + input.type,
+      });
       continue;
     }
 
@@ -392,7 +387,7 @@ ConfigureStaticLightingUniforms(const UploadedMaterial* material)
   const Shader& shader = material->material.shader;
   const Vector3 direction =
     Vector3Normalize(Vector3{ -4.076245f, -5.903862f, 1.005454f });
-  const Vector3 color = { 1.0f, 1.0f, 1.0f };
+  const Vector3 color = Vector3{ 1.0f, 1.0f, 1.0f };
   const int envMips = 1;
   const int envSamples = 8;
 
@@ -414,10 +409,61 @@ ConfigureFrameUniforms(const UploadedMaterial* material, const Camera& camera)
 }
 
 bool
+Vector3Less(Vector3 left, Vector3 right)
+{
+  if (left.x != right.x) {
+    return left.x < right.x;
+  }
+
+  if (left.y != right.y) {
+    return left.y < right.y;
+  }
+
+  return left.z < right.z;
+}
+
+bool
+CameraLess(const Camera& left, const Camera& right)
+{
+  if (Vector3Less(left.position, right.position)) {
+    return true;
+  }
+  if (Vector3Less(right.position, left.position)) {
+    return false;
+  }
+
+  if (Vector3Less(left.target, right.target)) {
+    return true;
+  }
+  if (Vector3Less(right.target, left.target)) {
+    return false;
+  }
+
+  if (Vector3Less(left.up, right.up)) {
+    return true;
+  }
+  if (Vector3Less(right.up, left.up)) {
+    return false;
+  }
+
+  if (left.fovy != right.fovy) {
+    return left.fovy < right.fovy;
+  }
+
+  return left.projection < right.projection;
+}
+
+bool
+SameCamera(const Camera& left, const Camera& right)
+{
+  return !CameraLess(left, right) && !CameraLess(right, left);
+}
+
+bool
 DrawCommandLess(const UploadedMaterial* leftMaterial,
                 const UploadedMaterial* rightMaterial,
-                const DrawCommand& left,
-                const DrawCommand& right)
+                const Mesh* leftMesh,
+                const Mesh* rightMesh)
 {
   const unsigned int leftShader = leftMaterial->material.shader.id;
   const unsigned int rightShader = rightMaterial->material.shader.id;
@@ -426,17 +472,17 @@ DrawCommandLess(const UploadedMaterial* leftMaterial,
     return leftShader < rightShader;
   }
 
-  if (left.material != right.material) {
-    return left.material < right.material;
+  if (leftMaterial != rightMaterial) {
+    return std::less<const UploadedMaterial*>{}(leftMaterial, rightMaterial);
   }
 
-  return left.mesh < right.mesh;
+  return std::less<const Mesh*>{}(leftMesh, rightMesh);
 }
 
 Mesh
 UploadMeshDescription(const MeshDescription& description)
 {
-  Mesh mesh = {};
+  Mesh mesh = Mesh{};
   mesh.vertexCount = static_cast<int>(description.vertices.size());
   mesh.triangleCount = static_cast<int>(description.indices.size() / 3);
 
@@ -539,15 +585,17 @@ Renderer::Load(const LevelDescription& level,
         LoadShaderFromMemory(generated.shader.vertexSource.c_str(),
                              generated.shader.fragmentSource.c_str());
       if (shader.id == 0) {
-        diagnostics.push_back(
-          { "raylib failed to compile generated MaterialX shader for " +
-            materialDescription.path });
+        diagnostics.push_back(Diagnostic{
+          "raylib failed to compile generated MaterialX shader for " +
+            materialDescription.path,
+        });
         return diagnostics;
       }
 
       ConfigureShader(shader);
       shaderIndex = shaders.size();
-      shaders.push_back(ShaderHandle(new Shader(shader)));
+      std::unique_ptr<Shader> uploadedShader = std::make_unique<Shader>(shader);
+      shaders.push_back(ShaderHandle(uploadedShader.release()));
       shaderCache.emplace(cacheKey, shaderIndex);
     }
 
@@ -559,8 +607,9 @@ Renderer::Load(const LevelDescription& level,
              ColorByte(materialDescription.baseColor[1]),
              ColorByte(materialDescription.baseColor[2]),
              255 };
-    MaterialHandle uploaded(
-      new UploadedMaterial(MakeUploadedMaterial(material)));
+    std::unique_ptr<UploadedMaterial> uploadedMaterial =
+      std::make_unique<UploadedMaterial>(MakeUploadedMaterial(material));
+    MaterialHandle uploaded(uploadedMaterial.release());
     uploaded->parameterUniforms = MakeUploadedMaterialUniforms(
       uploaded->material.shader, materialDescription, diagnostics);
     if (!diagnostics.empty()) {
@@ -574,55 +623,88 @@ Renderer::Load(const LevelDescription& level,
 
   for (const MeshDescription& meshDescription : level.meshes) {
     Mesh mesh = UploadMeshDescription(meshDescription);
-    meshes.push_back(MeshHandle(new Mesh(mesh)));
+    std::unique_ptr<Mesh> uploadedMesh = std::make_unique<Mesh>(mesh);
+    meshes.push_back(MeshHandle(uploadedMesh.release()));
   }
 
   return diagnostics;
 }
 
 void
-Renderer::Draw(entt::registry& registry, const Camera& camera) const
+Renderer::BeginFrame()
 {
-  std::vector<DrawCommand> drawCommands;
+  drawCommands.clear();
+}
 
-  for (const MaterialHandle& material : materials) {
-    ConfigureFrameUniforms(material.get(), camera);
-  }
-
+void
+Renderer::Submit(entt::registry& registry, const Camera& camera)
+{
   registry.view<const Renderable, const Transform>().each(
-    [this, &drawCommands](const entt::entity entity,
-                          const Renderable& renderable,
-                          const Transform& transform) {
+    [this, camera](const entt::entity entity,
+                   const Renderable& renderable,
+                   const Transform& transform) {
       (void)entity;
       if (renderable.mesh >= meshes.size() ||
           renderable.material >= materials.size()) {
         return;
       }
 
-      drawCommands.push_back({ renderable.mesh,
-                               renderable.material,
-                               RaylibMatrixFromTransform(transform.world) });
+      drawCommands.push_back(DrawCommand{
+        .camera = camera,
+        .mesh = meshes[renderable.mesh].get(),
+        .material = materials[renderable.material].get(),
+        .modelMatrix = RaylibMatrixFromTransform(transform.world),
+      });
     });
+}
 
+void
+Renderer::Flush()
+{
   std::ranges::sort(drawCommands,
-                    [this](const DrawCommand& left, const DrawCommand& right) {
-                      return DrawCommandLess(materials[left.material].get(),
-                                             materials[right.material].get(),
-                                             left,
-                                             right);
+                    [](const DrawCommand& left, const DrawCommand& right) {
+                      if (CameraLess(left.camera, right.camera)) {
+                        return true;
+                      }
+                      if (CameraLess(right.camera, left.camera)) {
+                        return false;
+                      }
+
+                      return DrawCommandLess(
+                        left.material, right.material, left.mesh, right.mesh);
                     });
 
-  std::size_t activeMaterial = materials.size();
-  for (const DrawCommand& command : drawCommands) {
-    const UploadedMaterial* material = materials[command.material].get();
-    if (command.material != activeMaterial) {
-      SetMaterialParameterUniforms(material);
-      activeMaterial = command.material;
+  std::size_t drawIndex = 0;
+  while (drawIndex < drawCommands.size()) {
+    const Camera camera = drawCommands[drawIndex].camera;
+    BeginMode3D(camera);
+
+    const UploadedMaterial* activeMaterial = nullptr;
+    while (drawIndex < drawCommands.size() &&
+           SameCamera(drawCommands[drawIndex].camera, camera)) {
+      const DrawCommand& command = drawCommands[drawIndex];
+      if (command.material != activeMaterial) {
+        ConfigureFrameUniforms(command.material, camera);
+        SetMaterialParameterUniforms(command.material);
+        activeMaterial = command.material;
+      }
+
+      DrawMesh(*command.mesh, command.material->material, command.modelMatrix);
+      ++drawIndex;
     }
 
-    const Mesh* mesh = meshes[command.mesh].get();
-    DrawMesh(*mesh, material->material, command.modelMatrix);
+    EndMode3D();
   }
+
+  BeginFrame();
+}
+
+void
+Renderer::Draw(entt::registry& registry, const Camera& camera)
+{
+  BeginFrame();
+  Submit(registry, camera);
+  Flush();
 }
 
 }

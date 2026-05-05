@@ -54,7 +54,7 @@ struct MaterialDescription
   std::string nodeCategory;
   std::string nodeType;
   std::vector<MaterialInput> inputs;
-  std::array<float, 3> baseColor = { 1.0f, 1.0f, 1.0f };
+  std::array<float, 3> baseColor = std::array<float, 3>{ 1.0f, 1.0f, 1.0f };
 };
 
 struct EntityDescription
@@ -63,7 +63,7 @@ struct EntityDescription
   std::string name;
   std::size_t mesh = 0;
   std::size_t material = 0;
-  std::array<float, 16> transform = {
+  std::array<float, 16> transform = std::array<float, 16>{
     1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
     0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
   };

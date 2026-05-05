@@ -182,17 +182,18 @@ MaterialXShaderGenerator::Generate(const MaterialDescription& material) const
 
     std::string validation;
     if (!document->validate(&validation)) {
-      result.diagnostics.push_back({ "MaterialX validation failed for " +
-                                     material.path + ": " + validation });
+      result.diagnostics.push_back(Diagnostic{
+        "MaterialX validation failed for " + material.path + ": " + validation,
+      });
       return result;
     }
 
     std::vector<MaterialX::TypedElementPtr> renderables =
       MaterialX::findRenderableElements(document);
     if (renderables.empty()) {
-      result.diagnostics.push_back(
-        { "MaterialX generation found no renderable element for " +
-          material.path });
+      result.diagnostics.push_back(Diagnostic{
+        "MaterialX generation found no renderable element for " + material.path,
+      });
       return result;
     }
 
@@ -218,12 +219,15 @@ MaterialXShaderGenerator::Generate(const MaterialDescription& material) const
 
     if (result.shader.vertexSource.empty() ||
         result.shader.fragmentSource.empty()) {
-      result.diagnostics.push_back(
-        { "MaterialX generated empty GLSL for " + material.path });
+      result.diagnostics.push_back(Diagnostic{
+        "MaterialX generated empty GLSL for " + material.path,
+      });
     }
   } catch (const std::exception& exception) {
-    result.diagnostics.push_back({ "MaterialX generation failed for " +
-                                   material.path + ": " + exception.what() });
+    result.diagnostics.push_back(Diagnostic{
+      "MaterialX generation failed for " + material.path + ": " +
+        exception.what(),
+    });
   }
 
   return result;

@@ -165,7 +165,7 @@ MatrixValue(GfMatrix4d matrix, double metersPerUnit)
     matrix[3][2] *= metersPerUnit;
   }
 
-  return {
+  return std::array<float, 16>{
     static_cast<float>(matrix[0][0]), static_cast<float>(matrix[0][1]),
     static_cast<float>(matrix[0][2]), static_cast<float>(matrix[0][3]),
     static_cast<float>(matrix[1][0]), static_cast<float>(matrix[1][1]),
@@ -201,8 +201,9 @@ ReadMaterial(const UsdShadeMaterial& material,
   UsdShadeShader shader = material.ComputeSurfaceSource(TfToken("mtlx"));
 
   if (!shader) {
-    diagnostics.push_back({ "Material " + PathOf(material) +
-                            " has no outputs:mtlx:surface source" });
+    diagnostics.push_back(Diagnostic{
+      "Material " + PathOf(material) + " has no outputs:mtlx:surface source",
+    });
     return std::nullopt;
   }
 
@@ -211,9 +212,10 @@ ReadMaterial(const UsdShadeMaterial& material,
   const std::string category = NodeCategoryFromId(id);
 
   if (category.empty()) {
-    diagnostics.push_back({ "Material " + PathOf(material) +
-                            " has an unsupported MaterialX shader id " +
-                            id.GetString() });
+    diagnostics.push_back(Diagnostic{
+      "Material " + PathOf(material) +
+        " has an unsupported MaterialX shader id " + id.GetString(),
+    });
     return std::nullopt;
   }
 
@@ -240,17 +242,19 @@ ReadMaterial(const UsdShadeMaterial& material,
     }
 
     const std::string name = input.GetBaseName().GetString();
-    description.inputs.push_back({ name, *type, *stringValue });
+    description.inputs.push_back(MaterialInput{ name, *type, *stringValue });
 
     if (name == "base_color" && value.IsHolding<GfVec3f>()) {
       const GfVec3f color = value.UncheckedGet<GfVec3f>();
-      description.baseColor = { color[0], color[1], color[2] };
+      description.baseColor =
+        std::array<float, 3>{ color[0], color[1], color[2] };
     }
   }
 
   if (description.inputs.empty()) {
-    diagnostics.push_back({ "Material " + PathOf(material) +
-                            " has no supported MaterialX inputs" });
+    diagnostics.push_back(Diagnostic{
+      "Material " + PathOf(material) + " has no supported MaterialX inputs",
+    });
     return std::nullopt;
   }
 
@@ -282,15 +286,15 @@ InterpolatedIndex(const TfToken& interpolation,
 Vec3
 VectorBetween(const GfVec3f& start, const GfVec3f& end)
 {
-  return { end[0] - start[0], end[1] - start[1], end[2] - start[2] };
+  return Vec3{ end[0] - start[0], end[1] - start[1], end[2] - start[2] };
 }
 
 Vec3
 Cross(const Vec3& left, const Vec3& right)
 {
-  return { left.y * right.z - left.z * right.y,
-           left.z * right.x - left.x * right.z,
-           left.x * right.y - left.y * right.x };
+  return Vec3{ left.y * right.z - left.z * right.y,
+               left.z * right.x - left.x * right.z,
+               left.x * right.y - left.y * right.x };
 }
 
 float
@@ -304,12 +308,12 @@ Normalized(Vec3 value)
 {
   const float normalLength = Length(value);
   if (normalLength <= 0.0f) {
-    return { 0.0f, 1.0f, 0.0f };
+    return Vec3{ 0.0f, 1.0f, 0.0f };
   }
 
-  return { value.x / normalLength,
-           value.y / normalLength,
-           value.z / normalLength };
+  return Vec3{ value.x / normalLength,
+               value.y / normalLength,
+               value.z / normalLength };
 }
 
 Vec3
@@ -332,11 +336,11 @@ NormalAt(const VtArray<GfVec3f>& normals,
     InterpolatedIndex(interpolation, pointIndex, faceVertexIndex, faceIndex);
 
   if (index >= normals.size()) {
-    return { 0.0f, 1.0f, 0.0f };
+    return Vec3{ 0.0f, 1.0f, 0.0f };
   }
 
   const GfVec3f normal = normals[index];
-  return Normalized({ normal[0], normal[1], normal[2] });
+  return Normalized(Vec3{ normal[0], normal[1], normal[2] });
 }
 
 void
@@ -370,11 +374,11 @@ TexcoordAt(const VtArray<GfVec2f>& texcoords,
     InterpolatedIndex(interpolation, pointIndex, faceVertexIndex, faceIndex);
 
   if (index >= texcoords.size()) {
-    return {};
+    return Vec2{};
   }
 
   const GfVec2f texcoord = texcoords[index];
-  return { texcoord[0], texcoord[1] };
+  return Vec2{ texcoord[0], texcoord[1] };
 }
 
 std::size_t
@@ -402,8 +406,9 @@ ReadMesh(const UsdGeomMesh& mesh,
   mesh.GetFaceVertexIndicesAttr().Get(&faceVertexIndices);
 
   if (points.empty() || faceVertexCounts.empty() || faceVertexIndices.empty()) {
-    diagnostics.push_back(
-      { "Mesh " + PathOf(mesh.GetPrim()) + " has no polygon data" });
+    diagnostics.push_back(Diagnostic{
+      "Mesh " + PathOf(mesh.GetPrim()) + " has no polygon data",
+    });
     return false;
   }
 
@@ -411,9 +416,10 @@ ReadMesh(const UsdGeomMesh& mesh,
   mesh.GetSubdivisionSchemeAttr().Get(&subdivisionScheme);
   if (!subdivisionScheme.IsEmpty() &&
       subdivisionScheme != UsdGeomTokens->none) {
-    diagnostics.push_back({ "Mesh " + PathOf(mesh.GetPrim()) +
-                            " uses unsupported subdivision scheme " +
-                            subdivisionScheme.GetString() });
+    diagnostics.push_back(Diagnostic{
+      "Mesh " + PathOf(mesh.GetPrim()) +
+        " uses unsupported subdivision scheme " + subdivisionScheme.GetString(),
+    });
     return false;
   }
 
@@ -441,23 +447,26 @@ ReadMesh(const UsdGeomMesh& mesh,
     const int faceVertexCount = faceVertexCounts[faceIndex];
 
     if (faceVertexCount < 3) {
-      diagnostics.push_back(
-        { "Mesh " + PathOf(mesh.GetPrim()) +
-          " contains a face with fewer than three vertices" });
+      diagnostics.push_back(Diagnostic{
+        "Mesh " + PathOf(mesh.GetPrim()) +
+          " contains a face with fewer than three vertices",
+      });
       return false;
     }
 
     if (faceVertexOffset + static_cast<std::size_t>(faceVertexCount) >
         faceVertexIndices.size()) {
-      diagnostics.push_back(
-        { "Mesh " + PathOf(mesh.GetPrim()) + " has invalid face indices" });
+      diagnostics.push_back(Diagnostic{
+        "Mesh " + PathOf(mesh.GetPrim()) + " has invalid face indices",
+      });
       return false;
     }
 
     for (int triangle = 1; triangle < faceVertexCount - 1; ++triangle) {
-      const std::array<int, 3> localIndices = { 0, triangle, triangle + 1 };
-      std::array<std::size_t, 3> usdLocalIndices = {};
-      std::array<int, 3> pointIndices = {};
+      const std::array<int, 3> localIndices =
+        std::array<int, 3>{ 0, triangle, triangle + 1 };
+      std::array<std::size_t, 3> usdLocalIndices = std::array<std::size_t, 3>{};
+      std::array<int, 3> pointIndices = std::array<int, 3>{};
 
       for (std::size_t trianglePoint = 0; trianglePoint < localIndices.size();
            ++trianglePoint) {
@@ -470,8 +479,10 @@ ReadMesh(const UsdGeomMesh& mesh,
         if (pointIndices[trianglePoint] < 0 ||
             static_cast<std::size_t>(pointIndices[trianglePoint]) >=
               points.size()) {
-          diagnostics.push_back({ "Mesh " + PathOf(mesh.GetPrim()) +
-                                  " references an invalid point index" });
+          diagnostics.push_back(Diagnostic{
+            "Mesh " + PathOf(mesh.GetPrim()) +
+              " references an invalid point index",
+          });
           return false;
         }
       }
@@ -488,8 +499,10 @@ ReadMesh(const UsdGeomMesh& mesh,
 
         if (description.vertices.size() >
             std::numeric_limits<std::uint16_t>::max()) {
-          diagnostics.push_back({ "Mesh " + PathOf(mesh.GetPrim()) +
-                                  " exceeds raylib 16-bit index capacity" });
+          diagnostics.push_back(Diagnostic{
+            "Mesh " + PathOf(mesh.GetPrim()) +
+              " exceeds raylib 16-bit index capacity",
+          });
           return false;
         }
 
@@ -503,16 +516,17 @@ ReadMesh(const UsdGeomMesh& mesh,
                                   faceIndex);
         }
 
-        description.vertices.push_back(
-          { { static_cast<float>(position[0] * metersPerUnit),
-              static_cast<float>(position[1] * metersPerUnit),
-              static_cast<float>(position[2] * metersPerUnit) },
-            vertexNormal,
-            TexcoordAt(texcoords,
-                       texcoordInterpolation,
-                       static_cast<std::size_t>(pointIndex),
-                       faceVertexIndex,
-                       faceIndex) });
+        description.vertices.push_back(MeshVertex{
+          Vec3{ static_cast<float>(position[0] * metersPerUnit),
+                static_cast<float>(position[1] * metersPerUnit),
+                static_cast<float>(position[2] * metersPerUnit) },
+          vertexNormal,
+          TexcoordAt(texcoords,
+                     texcoordInterpolation,
+                     static_cast<std::size_t>(pointIndex),
+                     faceVertexIndex,
+                     faceIndex),
+        });
         description.indices.push_back(
           static_cast<std::uint16_t>(description.vertices.size() - 1));
       }
@@ -532,15 +546,17 @@ UsdLevelLoader::Load(const std::filesystem::path& path) const
   LevelDescription level;
 
   if (!std::filesystem::exists(path)) {
-    level.diagnostics.push_back(
-      { "USD scene does not exist: " + path.string() });
+    level.diagnostics.push_back(Diagnostic{
+      "USD scene does not exist: " + path.string(),
+    });
     return level;
   }
 
   UsdStageRefPtr stage = UsdStage::Open(path.generic_string());
   if (!stage) {
-    level.diagnostics.push_back(
-      { "USD scene could not be opened: " + path.string() });
+    level.diagnostics.push_back(Diagnostic{
+      "USD scene could not be opened: " + path.string(),
+    });
     return level;
   }
 
@@ -557,8 +573,9 @@ UsdLevelLoader::Load(const std::filesystem::path& path) const
     UsdShadeMaterial material =
       UsdShadeMaterialBindingAPI(prim).ComputeBoundMaterial();
     if (!material) {
-      level.diagnostics.push_back(
-        { "Mesh " + PathOf(prim) + " has no material binding" });
+      level.diagnostics.push_back(Diagnostic{
+        "Mesh " + PathOf(prim) + " has no material binding",
+      });
       continue;
     }
 
@@ -593,18 +610,20 @@ UsdLevelLoader::Load(const std::filesystem::path& path) const
       objectPrim = prim;
     }
 
-    level.entities.push_back(
-      { PathOf(objectPrim),
-        ObjectName(prim),
-        meshIndex,
-        materialIt->second,
-        MatrixValue(xformCache.GetLocalToWorldTransform(objectPrim),
-                    metersPerUnit) });
+    level.entities.push_back(EntityDescription{
+      PathOf(objectPrim),
+      ObjectName(prim),
+      meshIndex,
+      materialIt->second,
+      MatrixValue(xformCache.GetLocalToWorldTransform(objectPrim),
+                  metersPerUnit),
+    });
   }
 
   if (level.entities.empty() && level.diagnostics.empty()) {
-    level.diagnostics.push_back(
-      { "USD scene contains no mesh entities: " + path.string() });
+    level.diagnostics.push_back(Diagnostic{
+      "USD scene contains no mesh entities: " + path.string(),
+    });
   }
 
   return level;

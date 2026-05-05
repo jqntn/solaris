@@ -194,7 +194,9 @@ LoadBlankTexture(int width, int height)
 
   SetTextureFilter(texture, TEXTURE_FILTER_BILINEAR);
   SetTextureWrap(texture, TEXTURE_WRAP_CLAMP);
-  return TextureHandle(new Texture2D(texture));
+  std::unique_ptr<Texture2D> loadedTexture =
+    std::make_unique<Texture2D>(texture);
+  return TextureHandle(loadedTexture.release());
 }
 
 }
@@ -305,7 +307,7 @@ private:
       EvaluateString(HitTestScript(mouseInside, localX, localY));
 
     if (result.size() < 3) {
-      return {};
+      return WebOverlayInputCapture{};
     }
 
     return WebOverlayInputCapture{ .mouse = result[0] == '1',
@@ -335,7 +337,7 @@ private:
     const ultralight::String result = view->EvaluateScript(
       ultralight::String(script.data(), script.size()), &exception);
     if (!exception.empty() || result.empty()) {
-      return {};
+      return std::string{};
     }
 
     return std::string(result.utf8().data(), result.utf8().length());
@@ -349,7 +351,7 @@ private:
     const int localY =
       std::clamp(static_cast<int>(std::floor(mousePosition.y)) - y, 0, height);
 
-    ultralight::MouseEvent moveEvent = {};
+    ultralight::MouseEvent moveEvent = ultralight::MouseEvent{};
     moveEvent.type = ultralight::MouseEvent::kType_MouseMoved;
     moveEvent.x = localX;
     moveEvent.y = localY;
@@ -388,7 +390,7 @@ private:
       view->Focus();
     }
 
-    ultralight::MouseEvent buttonEvent = {};
+    ultralight::MouseEvent buttonEvent = ultralight::MouseEvent{};
     buttonEvent.type = isPressed ? ultralight::MouseEvent::kType_MouseDown
                                  : ultralight::MouseEvent::kType_MouseUp;
     buttonEvent.x = localX;
@@ -408,7 +410,7 @@ private:
       return;
     }
 
-    ultralight::ScrollEvent scrollEvent = {};
+    ultralight::ScrollEvent scrollEvent = ultralight::ScrollEvent{};
     scrollEvent.type = ultralight::ScrollEvent::kType_ScrollByPixel;
     scrollEvent.delta_x = static_cast<int>(wheel.x * scrollPixelsPerWheelStep);
     scrollEvent.delta_y = static_cast<int>(wheel.y * scrollPixelsPerWheelStep);
@@ -491,7 +493,7 @@ private:
   std::vector<std::uint8_t> uploadPixels;
   ultralight::RefPtr<ultralight::Renderer> renderer;
   ultralight::RefPtr<ultralight::View> view;
-  std::array<bool, 3> capturedMouseButtons = {};
+  std::array<bool, 3> capturedMouseButtons = std::array<bool, 3>{};
   bool mouseInside = false;
   bool wasMouseInside = false;
 };

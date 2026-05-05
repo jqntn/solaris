@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <machina/level_instantiator.hpp>
 #include <machina/materialx_shader_generator.hpp>
+#include <machina/renderer.hpp>
 #include <machina/usd_level_loader.hpp>
 #include <raylib.h>
 #include <utility>
@@ -16,17 +17,10 @@ SampleScenePath()
          "suzannes.usda";
 }
 
-void
-DrawFps()
-{
-  DrawText(TextFormat("%d", GetFPS()), 8, 4, 30, GREEN);
 }
 
-}
-
-GameScene::GameScene(machina::Renderer renderer, entt::registry registry)
-  : renderer(std::move(renderer))
-  , registry(std::move(registry))
+GameScene::GameScene(ConstructorTag, entt::registry registry)
+  : registry(std::move(registry))
   , webOverlay(std::make_unique<machina::WebOverlay>(0,
                                                      0,
                                                      GetScreenWidth(),
@@ -35,7 +29,7 @@ GameScene::GameScene(machina::Renderer renderer, entt::registry registry)
 }
 
 GameScene::CreateResult
-GameScene::Create()
+GameScene::Create(machina::Renderer& renderer)
 {
   machina::LevelDescription level =
     machina::UsdLevelLoader().Load(SampleScenePath());
@@ -46,7 +40,6 @@ GameScene::Create()
 
   machina::MaterialXShaderGenerator shaderGenerator(
     std::filesystem::current_path() / MACHINA_MATERIALX_LIBRARY_ROOT);
-  machina::Renderer renderer;
   std::vector<machina::Diagnostic> diagnostics =
     renderer.Load(level, shaderGenerator);
   if (!diagnostics.empty()) {
@@ -58,36 +51,35 @@ GameScene::Create()
   machina::LevelInstantiator().Instantiate(registry, level);
 
   return CreateResult{
-    .scene = std::unique_ptr<machina::Scene>(
-      new GameScene(std::move(renderer), std::move(registry))),
+    .scene = std::make_unique<GameScene>(ConstructorTag{}, std::move(registry)),
   };
 }
 
 void
 GameScene::Update(machina::SceneStack&)
 {
-  showFps = showFps != IsKeyPressed(KEY_F1);
   const machina::WebOverlayInputCapture overlayCapture =
     webOverlay->Update(true);
   cameraController.Update(machina::StrategicCameraControls::Read(
-    { .mouseBlockedByUi = overlayCapture.mouse,
-      .keyboardBlockedByUi = overlayCapture.keyboard }));
+    machina::StrategicCameraControlCapture{
+      .mouseBlockedByUi = overlayCapture.mouse,
+      .keyboardBlockedByUi = overlayCapture.keyboard,
+    }));
   camera = cameraController.Camera3D();
 }
 
 void
-GameScene::Draw()
+GameScene::Draw(machina::SceneDrawContext& context)
 {
-  ClearBackground(Color{ 63, 63, 63, 255 });
+  context.renderer.Submit(registry, camera);
 
   BeginMode3D(camera);
-  renderer.Draw(registry, camera);
   DrawGrid(20, 1.0f);
   EndMode3D();
+}
 
-  if (showFps) {
-    DrawFps();
-  }
-
+void
+GameScene::DrawUi()
+{
   webOverlay->Draw();
 }

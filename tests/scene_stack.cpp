@@ -1,5 +1,6 @@
 #include <machina/scene.hpp>
 
+#include <machina/renderer.hpp>
 #include <memory>
 #include <print>
 #include <string>
@@ -63,7 +64,12 @@ public:
     }
   }
 
-  void Draw() override { events.push_back("draw:" + name); }
+  void Draw(machina::SceneDrawContext&) override
+  {
+    events.push_back("draw:" + name);
+  }
+
+  void DrawUi() override { events.push_back("ui:" + name); }
 
 private:
   std::vector<std::string>& events;
@@ -96,6 +102,15 @@ Same(const std::vector<std::string>& left,
   return left == right;
 }
 
+void
+DrawScenes(machina::SceneStack& scenes)
+{
+  machina::Renderer renderer;
+  machina::SceneDrawContext context =
+    machina::SceneDrawContext{ .renderer = renderer };
+  scenes.Draw(context);
+}
+
 [[nodiscard]] int
 CheckTopOnlyUpdateAndBottomToTopDraw()
 {
@@ -105,14 +120,20 @@ CheckTopOnlyUpdateAndBottomToTopDraw()
   scenes.Push(Scene(events, "top"));
 
   scenes.Update();
-  if (!Same(events, { "update:top" })) {
+  if (!Same(events, std::vector<std::string>{ "update:top" })) {
     return Fail("expected only the top scene to update");
   }
 
   events.clear();
-  scenes.Draw();
-  if (!Same(events, { "draw:bottom", "draw:top" })) {
+  DrawScenes(scenes);
+  if (!Same(events, std::vector<std::string>{ "draw:bottom", "draw:top" })) {
     return Fail("expected scenes to draw from bottom to top");
+  }
+
+  events.clear();
+  scenes.DrawUi();
+  if (!Same(events, std::vector<std::string>{ "ui:bottom", "ui:top" })) {
+    return Fail("expected scene UI to draw from bottom to top");
   }
 
   return 0;
@@ -126,13 +147,14 @@ CheckDeferredPush()
   scenes.Push(Scene(events, "root", Action::Push, Scene(events, "pushed")));
 
   scenes.Update();
-  if (!Same(events, { "update:root" }) || scenes.Size() != 2) {
+  if (!Same(events, std::vector<std::string>{ "update:root" }) ||
+      scenes.Size() != 2) {
     return Fail("expected push to apply after the current update");
   }
 
   events.clear();
   scenes.Update();
-  if (!Same(events, { "update:pushed" })) {
+  if (!Same(events, std::vector<std::string>{ "update:pushed" })) {
     return Fail("expected pushed scene to become the top scene");
   }
 
@@ -148,13 +170,14 @@ CheckDeferredPop()
   scenes.Push(Scene(events, "top", Action::Pop));
 
   scenes.Update();
-  if (!Same(events, { "update:top" }) || scenes.Size() != 1) {
+  if (!Same(events, std::vector<std::string>{ "update:top" }) ||
+      scenes.Size() != 1) {
     return Fail("expected pop to apply after the current update");
   }
 
   events.clear();
-  scenes.Draw();
-  if (!Same(events, { "draw:bottom" })) {
+  DrawScenes(scenes);
+  if (!Same(events, std::vector<std::string>{ "draw:bottom" })) {
     return Fail("expected popped scene to stop drawing");
   }
 
@@ -171,13 +194,14 @@ CheckDeferredReplace()
     Scene(events, "top", Action::Replace, Scene(events, "replacement")));
 
   scenes.Update();
-  if (!Same(events, { "update:top" }) || scenes.Size() != 2) {
+  if (!Same(events, std::vector<std::string>{ "update:top" }) ||
+      scenes.Size() != 2) {
     return Fail("expected replace to preserve stack depth after update");
   }
 
   events.clear();
   scenes.Update();
-  if (!Same(events, { "update:replacement" })) {
+  if (!Same(events, std::vector<std::string>{ "update:replacement" })) {
     return Fail("expected replacement scene to become the top scene");
   }
 
@@ -193,13 +217,15 @@ CheckDeferredClearAndEmptyNoOp()
   scenes.Push(Scene(events, "top", Action::Clear));
 
   scenes.Update();
-  if (!Same(events, { "update:top" }) || !scenes.Empty()) {
+  if (!Same(events, std::vector<std::string>{ "update:top" }) ||
+      !scenes.Empty()) {
     return Fail("expected clear to empty the stack after update");
   }
 
   events.clear();
   scenes.Update();
-  scenes.Draw();
+  DrawScenes(scenes);
+  scenes.DrawUi();
   if (!events.empty()) {
     return Fail("expected empty stack update and draw to be no-ops");
   }
@@ -221,7 +247,8 @@ CheckImmediateMutationsAndQuit()
   scenes.Replace(Scene(events, "replacement"));
   events.clear();
   scenes.Update();
-  if (!Same(events, { "update:replacement" }) || scenes.Size() != 1) {
+  if (!Same(events, std::vector<std::string>{ "update:replacement" }) ||
+      scenes.Size() != 1) {
     return Fail("expected immediate replace outside update");
   }
 
@@ -233,7 +260,8 @@ CheckImmediateMutationsAndQuit()
   scenes.Push(Scene(events, "quitter", Action::Quit));
   events.clear();
   scenes.Update();
-  if (!Same(events, { "update:quitter" }) || !scenes.ShouldQuit()) {
+  if (!Same(events, std::vector<std::string>{ "update:quitter" }) ||
+      !scenes.ShouldQuit()) {
     return Fail("expected scene-driven quit request to be recorded");
   }
 

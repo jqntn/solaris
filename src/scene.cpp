@@ -44,10 +44,18 @@ SceneStack::Update()
 }
 
 void
-SceneStack::Draw()
+SceneStack::Draw(SceneDrawContext& context)
 {
   for (const std::unique_ptr<Scene>& scene : scenes) {
-    scene->Draw();
+    scene->Draw(context);
+  }
+}
+
+void
+SceneStack::DrawUi()
+{
+  for (const std::unique_ptr<Scene>& scene : scenes) {
+    scene->DrawUi();
   }
 }
 
