@@ -9,6 +9,13 @@
     return !!root && !!element && root.contains(element);
   }
 
+  var keyboardFocusVisible = false;
+
+  function setKeyboardFocusVisible(value) {
+    keyboardFocusVisible = value;
+    document.documentElement.setAttribute("data-keyboard-focus", value ? "true" : "false");
+  }
+
   function keyName(event) {
     var key = (event.key || "").toLowerCase();
     if (key) {
@@ -18,10 +25,16 @@
       if (key === "esc") {
         return "escape";
       }
+      if (key === "tab" || key === "u+0009") {
+        return "tab";
+      }
       return key;
     }
 
     var keyIdentifier = (event.keyIdentifier || "").toLowerCase();
+    if (keyIdentifier === "tab" || keyIdentifier === "u+0009") {
+      return "tab";
+    }
     if (keyIdentifier === "u+000d") {
       return "enter";
     }
@@ -41,6 +54,9 @@
     }
     if (code === 27) {
       return "escape";
+    }
+    if (code === 9) {
+      return "tab";
     }
     return "";
   }
@@ -206,8 +222,13 @@
       }
 
       if (key === "arrowleft" || key === "arrowright") {
+        var active = document.activeElement;
+        if ((active !== cancelButton && active !== confirmButton) || !keyboardFocusVisible) {
+          return true;
+        }
+
         event.preventDefault();
-        if (activeHtmlElement() === confirmButton) {
+        if (active === confirmButton) {
           cancelButton.focus();
         } else {
           confirmButton.focus();
@@ -226,9 +247,28 @@
     };
   }
 
+  document.addEventListener("keydown", function(event) {
+    if (keyName(event) === "tab") {
+      setKeyboardFocusVisible(true);
+    }
+  });
+
+  document.addEventListener("mousedown", function() {
+    setKeyboardFocusVisible(false);
+  });
+
+  document.addEventListener("pointerdown", function() {
+    setKeyboardFocusVisible(false);
+  });
+
+  setKeyboardFocusVisible(false);
+
   window.solarisUi = {
     createConfirmDialog: createConfirmDialog,
     createModal: createModal,
+    hasKeyboardFocusVisible: function() {
+      return keyboardFocusVisible;
+    },
     installButtonConfirmKeys: installButtonConfirmKeys,
     isConfirmKey: isConfirmKey,
     keyName: keyName

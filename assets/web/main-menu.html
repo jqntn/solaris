@@ -692,13 +692,13 @@
         const activeIndex = navButtons.indexOf(active);
         const key = shortcutKey(event);
 
-        if (event.key === "ArrowDown" && activeIndex >= 0) {
+        if (event.key === "ArrowDown" && activeIndex >= 0 && window.solarisUi.hasKeyboardFocusVisible()) {
           event.preventDefault();
           navButtons[(activeIndex + 1) % navButtons.length].focus();
           return;
         }
 
-        if (event.key === "ArrowUp" && activeIndex >= 0) {
+        if (event.key === "ArrowUp" && activeIndex >= 0 && window.solarisUi.hasKeyboardFocusVisible()) {
           event.preventDefault();
           navButtons[(activeIndex + navButtons.length - 1) % navButtons.length].focus();
           return;

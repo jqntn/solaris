@@ -84,7 +84,7 @@ button:focus {
   outline: 0;
 }
 
-button:focus-visible {
+html[data-keyboard-focus="true"] button:focus {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
