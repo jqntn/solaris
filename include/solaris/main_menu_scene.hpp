@@ -31,7 +31,7 @@ private:
   bool& showFps;
   std::unique_ptr<machina::WebOverlay> webOverlay;
   Music music = Music{};
-  float musicVolume = 0.72f;
+  float musicVolume = 0.25f;
   bool musicMuted = false;
   bool musicValid = false;
   bool newGameRequested = false;

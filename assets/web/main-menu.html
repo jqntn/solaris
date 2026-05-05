@@ -157,26 +157,60 @@
       .row-label {
         color: var(--ink-high);
         font-weight: 600;
+        white-space: nowrap;
       }
 
       .row-value {
-        color: var(--ink-muted);
-      }
-
-      .setting-control {
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: flex-end;
         gap: var(--space-2);
+        color: var(--ink-muted);
+        white-space: nowrap;
       }
 
-      .step-button {
-        width: 44px;
+      .setting-control {
+        display: inline-flex;
+        align-items: center;
+        overflow: hidden;
+        border: 1px solid rgba(163, 197, 214, 0.2);
+        border-radius: 6px;
+        background: rgba(7, 13, 18, 0.46);
+      }
+
+      .setting-control button {
+        min-height: 30px;
+        height: 30px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: var(--ink-muted);
+        font-size: 0.9rem;
+        line-height: 1;
+      }
+
+      .setting-control button + button {
+        border-left: 1px solid rgba(163, 197, 214, 0.16);
+      }
+
+      .setting-control button:hover,
+      .setting-control button:focus {
+        background: rgba(143, 215, 255, 0.12);
+        color: var(--ink-high);
+      }
+
+      .setting-control .step-button {
+        width: 32px;
         padding: 0;
       }
 
-      .toggle-button[aria-pressed="true"] {
-        border-color: rgba(128, 216, 162, 0.52);
+      .setting-control .toggle-button {
+        min-width: 58px;
+        padding: 0 var(--space-2);
+      }
+
+      .setting-control .toggle-button[aria-pressed="true"] {
+        background: rgba(128, 216, 162, 0.12);
         color: var(--confirm);
       }
 
@@ -399,7 +433,7 @@
         document.getElementById("detailAction5")
       ];
       let activePanel = "";
-      let menuVolume = 72;
+      let menuVolume = 25;
       let menuMuted = false;
       let showFps = false;
 
@@ -471,17 +505,31 @@
             name: "settings",
             meta: ["Session controls", "Settings", "Session only"],
             rows: [
-              ["Menu music volume", `${menuVolume}%`],
-              ["Mute menu music", menuMuted ? "On" : "Off"],
-              ["Show FPS", showFps ? "On" : "Off"],
-              ["Accessibility profile", "Defaults active"]
+              {
+                label: "Menu music volume",
+                value: `${menuVolume}%`,
+                controls: [
+                  { label: "-", action: "volume_down", className: "step-button", ariaLabel: "Lower menu music volume" },
+                  { label: "+", action: "volume_up", className: "step-button", ariaLabel: "Raise menu music volume" }
+                ]
+              },
+              {
+                label: "Mute menu music",
+                value: "",
+                controls: [
+                  { label: menuMuted ? "Unmute" : "Mute", action: "toggle_mute", className: "toggle-button", pressed: menuMuted }
+                ]
+              },
+              {
+                label: "Show FPS",
+                value: "",
+                controls: [
+                  { label: showFps ? "Hide" : "Show", action: "toggle_fps", className: "toggle-button", pressed: showFps }
+                ]
+              }
             ],
             actions: [
-              { label: "Volume -", action: "volume_down" },
-              { label: "Volume +", action: "volume_up" },
-              { label: menuMuted ? "Unmute" : "Mute", action: "toggle_mute" },
-              { label: showFps ? "Hide FPS" : "Show FPS", action: "toggle_fps" },
-              { label: "Back", action: "close_panel", primary: true }
+              { label: "Back", action: "close_panel" }
             ]
           };
         }
@@ -517,6 +565,52 @@
         };
       }
 
+      function applyButtonAction(button, action) {
+        button.removeAttribute("data-action");
+        button.removeAttribute("data-command");
+        button.removeAttribute("data-view");
+        button.removeAttribute("aria-pressed");
+        if (action.action) {
+          button.dataset.action = action.action;
+        }
+        if (action.command) {
+          button.dataset.command = action.command;
+        }
+        if (action.view) {
+          button.dataset.view = action.view;
+        }
+        if (typeof action.pressed === "boolean") {
+          button.setAttribute("aria-pressed", action.pressed ? "true" : "false");
+        }
+      }
+
+      function renderRowValue(valueEl, detail) {
+        valueEl.textContent = detail.value || "";
+        if (!detail.controls || detail.controls.length === 0) {
+          return;
+        }
+
+        const controlsEl = document.createElement("span");
+        controlsEl.className = "setting-control";
+        detail.controls.forEach((control) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = control.label;
+          if (control.className) {
+            button.className = control.className;
+          }
+          if (control.ariaLabel) {
+            button.setAttribute("aria-label", control.ariaLabel);
+          }
+          applyButtonAction(button, control);
+          button.addEventListener("click", () => {
+            activateButton(button);
+          });
+          controlsEl.appendChild(button);
+        });
+        valueEl.appendChild(controlsEl);
+      }
+
       function showPanel(panelName) {
         if (panelName === "home" || !panelName) {
           closePanel();
@@ -530,16 +624,17 @@
           button.dataset.active = button.dataset.view === content.name ? "true" : "false";
         });
         detailRows.forEach((row, index) => {
-          const detail = content.rows[index];
-          row[0].textContent = detail ? detail[0] : "";
-          row[1].textContent = detail ? detail[1] : "";
+          const source = content.rows[index];
+          const detail = Array.isArray(source)
+            ? { label: source[0], value: source[1] }
+            : source;
+          row[0].textContent = detail ? detail.label : "";
+          renderRowValue(row[1], detail || { value: "" });
           row[0].parentElement.classList.toggle("is-empty", !detail);
         });
         detailActions.forEach((button, index) => {
           const action = content.actions[index];
-          button.removeAttribute("data-action");
-          button.removeAttribute("data-command");
-          button.removeAttribute("data-view");
+          applyButtonAction(button, action || {});
           button.classList.toggle("primary-action", !!(action && action.primary));
           if (!action) {
             button.textContent = "";
@@ -551,15 +646,6 @@
           button.textContent = action.label;
           button.disabled = false;
           button.removeAttribute("aria-hidden");
-          if (action.action) {
-            button.dataset.action = action.action;
-          }
-          if (action.command) {
-            button.dataset.command = action.command;
-          }
-          if (action.view) {
-            button.dataset.view = action.view;
-          }
         });
         viewEyebrowEl.textContent = content.meta[0];
         viewTitleEl.textContent = content.meta[1];
@@ -626,9 +712,9 @@
         if (action === "close_panel") {
           closePanel();
         } else if (action === "volume_down") {
-          updateMenuVolume(menuVolume - 8);
+          updateMenuVolume(menuVolume - 5);
         } else if (action === "volume_up") {
-          updateMenuVolume(menuVolume + 8);
+          updateMenuVolume(menuVolume + 5);
         } else if (action === "toggle_mute") {
           updateMenuMuted(!menuMuted);
         } else if (action === "toggle_fps") {
