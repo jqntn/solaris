@@ -26,6 +26,7 @@ set(MACHINA_ENGINE_SOURCES
     src/level_instantiator.cpp
     src/materialx_shader_generator.cpp
     src/renderer.cpp
+    src/scene.cpp
     src/strategic_camera_controller.cpp
     src/usd_level_loader.cpp
     src/web_overlay.cpp)
@@ -47,7 +48,7 @@ target_link_libraries(
            machina_nvidia_usd
            machina_ultralight)
 
-add_executable(solaris src/main.cpp)
+add_executable(solaris src/game_scene.cpp src/main.cpp)
 target_link_libraries(solaris PRIVATE machina_engine)
 
 find_program(
@@ -107,6 +108,12 @@ set_target_properties(
     PROPERTIES CXX_CLANG_TIDY "${MACHINA_CLANG_TIDY}")
 
 add_test(NAME strategic_camera_controller COMMAND machina_strategic_camera)
+
+add_executable(machina_scene_stack tests/scene_stack.cpp)
+target_link_libraries(machina_scene_stack PRIVATE machina_engine)
+set_target_properties(machina_scene_stack PROPERTIES CXX_CLANG_TIDY "${MACHINA_CLANG_TIDY}")
+
+add_test(NAME scene_stack COMMAND machina_scene_stack)
 
 function(machina_copy_assets target)
     add_custom_command(
