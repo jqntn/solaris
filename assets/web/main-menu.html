@@ -7,8 +7,8 @@
     <style>
       body {
         background:
-          linear-gradient(90deg, rgba(2, 6, 10, 0.94) 0%, rgba(2, 6, 10, 0.74) 42%, rgba(2, 6, 10, 0.18) 100%),
-          linear-gradient(0deg, rgba(2, 6, 10, 0.92) 0%, rgba(2, 6, 10, 0.1) 46%, rgba(2, 6, 10, 0.8) 100%),
+          linear-gradient(90deg, rgba(2, 6, 10, 0.78) 0%, rgba(2, 6, 10, 0.52) 42%, rgba(2, 6, 10, 0.08) 100%),
+          linear-gradient(0deg, rgba(2, 6, 10, 0.72) 0%, rgba(2, 6, 10, 0.06) 46%, rgba(2, 6, 10, 0.58) 100%),
           url("../graphics/mainmenu.jpg");
         background-position: center;
         background-size: cover;
@@ -19,24 +19,23 @@
         height: 100%;
         display: grid;
         grid-template-columns: minmax(320px, 420px) minmax(420px, 760px);
-        align-items: stretch;
-        gap: var(--space-5);
+        grid-template-rows: auto 1fr auto 1fr auto;
+        align-items: start;
+        column-gap: var(--space-5);
         padding: var(--space-6);
       }
 
-      .brand-column,
       .view-column {
         min-height: 0;
       }
 
       .brand-column {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        gap: var(--space-5);
+        display: contents;
       }
 
       .brand-block {
+        grid-column: 1;
+        grid-row: 1;
         margin-top: var(--space-4);
       }
 
@@ -51,6 +50,8 @@
       }
 
       .main-nav {
+        grid-column: 1;
+        grid-row: 3;
         display: grid;
         gap: var(--space-2);
         max-width: 320px;
@@ -86,9 +87,16 @@
       }
 
       .view-column {
+        grid-column: 2;
+        grid-row: 3;
         display: flex;
-        align-items: flex-end;
+        align-items: flex-start;
         justify-content: flex-start;
+      }
+
+      .view-column[data-open="false"] {
+        visibility: hidden;
+        pointer-events: none;
       }
 
       .view-shell {
@@ -142,6 +150,10 @@
         text-align: right;
       }
 
+      .detail-row.is-empty {
+        visibility: hidden;
+      }
+
       .row-label {
         color: var(--ink-high);
         font-weight: 600;
@@ -174,6 +186,7 @@
 
       .view-actions {
         display: flex;
+        flex-wrap: wrap;
         gap: var(--space-3);
         margin-top: var(--space-4);
       }
@@ -188,6 +201,9 @@
       }
 
       .footer-line {
+        grid-column: 1;
+        grid-row: 5;
+        align-self: end;
         display: flex;
         flex-wrap: wrap;
         align-items: center;
@@ -230,8 +246,14 @@
       @media (max-width: 980px) {
         .menu-root {
           grid-template-columns: 1fr;
-          grid-template-rows: auto 1fr;
+          grid-template-rows: auto auto auto 1fr auto;
+          row-gap: var(--space-5);
           padding: var(--space-4);
+        }
+
+        .brand-block {
+          grid-column: 1;
+          grid-row: 1;
         }
 
         .title {
@@ -239,12 +261,21 @@
         }
 
         .main-nav {
+          grid-column: 1;
+          grid-row: 2;
           max-width: none;
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .view-column {
+          grid-column: 1;
+          grid-row: 3;
           align-items: stretch;
+        }
+
+        .footer-line {
+          grid-column: 1;
+          grid-row: 5;
         }
 
         .keyboard-hints {
@@ -263,12 +294,12 @@
         </div>
 
         <nav class="main-nav" aria-label="Main menu">
-          <button class="nav-button primary-action" id="newGameButton" data-key="N" data-view="home" data-command="new_game">New Game</button>
+          <button class="nav-button primary-action" id="newGameButton" data-key="N" data-command="new_game">New Game</button>
           <button class="nav-button" data-key="C" data-view="continue">Continue</button>
           <button class="nav-button" data-key="L" data-view="load">Load</button>
           <button class="nav-button" data-key="S" data-view="settings">Settings</button>
           <button class="nav-button" data-key="R" data-view="credits">Credits</button>
-          <button class="nav-button" data-key="Esc" data-view="quit" data-command="quit">Quit</button>
+          <button class="nav-button" data-key="Esc" data-command="quit">Quit</button>
         </nav>
 
         <div class="footer-line">
@@ -277,7 +308,7 @@
         </div>
       </section>
 
-      <section class="view-column">
+      <section class="view-column" id="viewColumn" data-open="false">
         <div class="view-shell">
           <header class="view-header">
             <div>
@@ -311,6 +342,7 @@
               <button id="detailAction2" type="button"></button>
               <button id="detailAction3" type="button"></button>
               <button id="detailAction4" type="button"></button>
+              <button id="detailAction5" type="button"></button>
             </div>
           </section>
         </div>
@@ -344,6 +376,7 @@
       const nativeStatusEl = document.getElementById("nativeStatus");
       const viewTitleEl = document.getElementById("viewTitle");
       const viewEyebrowEl = document.getElementById("viewEyebrow");
+      const viewColumnEl = document.getElementById("viewColumn");
       const newGameButton = document.getElementById("newGameButton");
       const navButtons = Array.from(document.querySelectorAll(".nav-button"));
       const detailRows = [
@@ -356,11 +389,13 @@
         document.getElementById("detailAction1"),
         document.getElementById("detailAction2"),
         document.getElementById("detailAction3"),
-        document.getElementById("detailAction4")
+        document.getElementById("detailAction4"),
+        document.getElementById("detailAction5")
       ];
-      let activePanel = "home";
+      let activePanel = "";
       let menuVolume = 72;
       let menuMuted = false;
+      let showFps = false;
 
       const quitConfirm = window.solarisUi.createConfirmDialog({
         modal: document.getElementById("quitConfirm"),
@@ -404,7 +439,7 @@
             ],
             actions: [
               { label: "Start New Game", command: "new_game", primary: true },
-              { label: "Back", view: "home" }
+              { label: "Back", action: "close_panel" }
             ]
           };
         }
@@ -420,7 +455,7 @@
               ["Available action", "Start a new prototype session"]
             ],
             actions: [
-              { label: "Back", view: "home" }
+              { label: "Back", action: "close_panel" }
             ]
           };
         }
@@ -432,14 +467,15 @@
             rows: [
               ["Menu music volume", `${menuVolume}%`],
               ["Mute menu music", menuMuted ? "On" : "Off"],
-              ["Display mode", "Read-only"],
+              ["Show FPS", showFps ? "On" : "Off"],
               ["Accessibility profile", "Defaults active"]
             ],
             actions: [
               { label: "Volume -", action: "volume_down" },
               { label: "Volume +", action: "volume_up" },
               { label: menuMuted ? "Unmute" : "Mute", action: "toggle_mute" },
-              { label: "Done", view: "home", primary: true }
+              { label: showFps ? "Hide FPS" : "Show FPS", action: "toggle_fps" },
+              { label: "Back", action: "close_panel", primary: true }
             ]
           };
         }
@@ -449,30 +485,12 @@
             name: "credits",
             meta: ["Build record", "Credits", "Local assets"],
             rows: [
-              ["Design direction", "Civilization identity under systemic pressure"],
-              ["Engine layer", "raylib, Ultralight, USD, MaterialX"],
+              ["Engine layer", "raylib, Ultralight, EnTT, USD, MaterialX"],
               ["Fonts", "Orbitron and Titillium Web under OFL"],
-              ["UI references", "X4 Foundations and Stellaris"]
+              ["UI references", "X4: Foundations and Stellaris"]
             ],
             actions: [
-              { label: "Back", view: "home" }
-            ]
-          };
-        }
-
-        if (panelName === "quit") {
-          return {
-            name: "quit",
-            meta: ["Exit command", "Quit", "Confirmation required"],
-            rows: [
-              ["Exit command", "Confirmation required"],
-              ["Session state", "No persistent save backend in this build"],
-              ["Result", "Close the application"],
-              ["Available action", "Cancel or confirm"]
-            ],
-            actions: [
-              { label: "Quit", command: "quit", primary: true },
-              { label: "Cancel", view: "home" }
+              { label: "Back", action: "close_panel" }
             ]
           };
         }
@@ -494,14 +512,22 @@
       }
 
       function showPanel(panelName) {
+        if (panelName === "home" || !panelName) {
+          closePanel();
+          return;
+        }
+
         const content = panelContent(panelName);
         activePanel = content.name;
+        viewColumnEl.dataset.open = "true";
         navButtons.forEach((button) => {
           button.dataset.active = button.dataset.view === content.name ? "true" : "false";
         });
         detailRows.forEach((row, index) => {
-          row[0].textContent = content.rows[index][0];
-          row[1].textContent = content.rows[index][1];
+          const detail = content.rows[index];
+          row[0].textContent = detail ? detail[0] : "";
+          row[1].textContent = detail ? detail[1] : "";
+          row[0].parentElement.classList.toggle("is-empty", !detail);
         });
         detailActions.forEach((button, index) => {
           const action = content.actions[index];
@@ -534,6 +560,24 @@
         setStatus("ready", content.meta[2]);
       }
 
+      function closePanel() {
+        activePanel = "";
+        viewColumnEl.dataset.open = "false";
+        navButtons.forEach((button) => {
+          button.dataset.active = "false";
+        });
+        detailActions.forEach((button) => {
+          button.removeAttribute("data-action");
+          button.removeAttribute("data-command");
+          button.removeAttribute("data-view");
+          button.classList.remove("primary-action");
+          button.textContent = "";
+          button.disabled = true;
+          button.setAttribute("aria-hidden", "true");
+        });
+        setStatus("ready", "Ready");
+      }
+
       function runCommand(command) {
         if (command === "quit") {
           quitConfirm.open();
@@ -564,13 +608,25 @@
         }
       }
 
+      function updateShowFps(value) {
+        showFps = value;
+        sendNative("set_show_fps", showFps ? "true" : "false");
+        if (activePanel === "settings") {
+          showPanel("settings");
+        }
+      }
+
       function runAction(action) {
-        if (action === "volume_down") {
+        if (action === "close_panel") {
+          closePanel();
+        } else if (action === "volume_down") {
           updateMenuVolume(menuVolume - 8);
         } else if (action === "volume_up") {
           updateMenuVolume(menuVolume + 8);
         } else if (action === "toggle_mute") {
           updateMenuMuted(!menuMuted);
+        } else if (action === "toggle_fps") {
+          updateShowFps(!showFps);
         }
       }
 
@@ -642,23 +698,14 @@
           return;
         }
 
-        if (key === "enter" || key === "space") {
-          const focusedButton = active && active.tagName === "BUTTON" ? active : null;
-          if (focusedButton) {
-            event.preventDefault();
-            activateButton(focusedButton);
-          }
-          return;
-        }
-
         const shortcuts = {
           c: () => showPanel("continue"),
           l: () => showPanel("load"),
           n: () => runCommand("new_game"),
           s: () => showPanel("settings"),
           r: () => showPanel("credits"),
-          esc: () => runCommand("quit"),
-          escape: () => runCommand("quit")
+          esc: () => activePanel ? closePanel() : runCommand("quit"),
+          escape: () => activePanel ? closePanel() : runCommand("quit")
         };
         if (shortcuts[key]) {
           event.preventDefault();
@@ -666,7 +713,11 @@
         }
       });
 
-      showPanel("home");
+      window.solarisUi.installButtonConfirmKeys({
+        activate: activateButton
+      });
+
+      closePanel();
       newGameButton.focus();
     </script>
   </body>

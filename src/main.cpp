@@ -38,10 +38,10 @@ main()
 
   machina::Renderer renderer;
   machina::SceneStack scenes;
-  scenes.Push(std::make_unique<MainMenuScene>(renderer));
+  bool showFps = false;
+  scenes.Push(std::make_unique<MainMenuScene>(renderer, showFps));
   machina::SceneDrawContext drawContext =
     machina::SceneDrawContext{ .renderer = renderer };
-  bool showFps = false;
 
   while (!WindowShouldClose() && !scenes.ShouldQuit()) {
     showFps = showFps != IsKeyPressed(KEY_F1);

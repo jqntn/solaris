@@ -61,8 +61,9 @@ DiagnosticMessage(const GameScene::CreateResult& result)
 
 }
 
-MainMenuScene::MainMenuScene(machina::Renderer& renderer)
+MainMenuScene::MainMenuScene(machina::Renderer& renderer, bool& showFps)
   : renderer(renderer)
+  , showFps(showFps)
   , webOverlay(std::make_unique<machina::WebOverlay>(
       0,
       0,
@@ -152,6 +153,9 @@ MainMenuScene::HandleWebCommand(std::string command, std::string payload)
       musicMuted = parsed.musicMuted;
       ApplyMusicVolume();
       break;
+    case solaris::MainMenuCommandKind::SetShowFps:
+      showFps = parsed.showFps;
+      break;
     case solaris::MainMenuCommandKind::Unknown:
       break;
   }
@@ -175,7 +179,7 @@ MainMenuScene::StartNewGame(machina::SceneStack& scenes)
   newGameRequested = false;
   SetMenuStatus("loading", "Loading prototype scene");
 
-  GameScene::CreateResult gameScene = GameScene::Create(renderer);
+  GameScene::CreateResult gameScene = GameScene::Create(renderer, showFps);
   if (gameScene.scene == nullptr || !gameScene.diagnostics.empty()) {
     SetMenuStatus("error", DiagnosticMessage(gameScene));
     return;

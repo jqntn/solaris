@@ -44,35 +44,30 @@
         font-weight: 600;
       }
 
-      .hud-readouts {
+      .hud-actions {
         display: flex;
         align-items: center;
         gap: var(--space-2);
+        pointer-events: auto;
       }
 
-      .hud-readout {
-        min-width: 96px;
-        padding: var(--space-2) var(--space-3);
-        border: 1px solid rgba(163, 197, 214, 0.16);
-        border-radius: var(--radius);
+      .hud-actions button {
+        min-width: 116px;
+        padding: 0 var(--space-4);
+        border-color: rgba(163, 197, 214, 0.16);
         background: rgba(255, 255, 255, 0.035);
-      }
-
-      .hud-readout span {
-        display: block;
-      }
-
-      .hud-readout .label {
-        color: var(--ink-muted);
-        font-size: 0.74rem;
-        font-weight: 600;
-        text-transform: uppercase;
-      }
-
-      .hud-readout .value {
         color: var(--ink-high);
-        font-size: 0.95rem;
         font-weight: 600;
+      }
+
+      .hud-actions button:hover,
+      .hud-actions button:focus {
+        border-color: var(--line-strong);
+        color: var(--ink-high);
+      }
+
+      .hud-actions button:active {
+        color: var(--ink-high);
       }
 
       .hud-footer {
@@ -95,23 +90,41 @@
           <h1 class="hud-title">SOLARIS</h1>
           <span class="status-pill" data-tone="ready">Prototype scene</span>
         </div>
-        <div class="hud-readouts">
-          <div class="hud-readout">
-            <span class="label">View</span>
-            <span class="value">Strategic</span>
-          </div>
-          <div class="hud-readout">
-            <span class="label">Layer</span>
-            <span class="value">Scene test</span>
-          </div>
-          <div class="hud-readout">
-            <span class="label">Input</span>
-            <span class="value">Camera free</span>
-          </div>
+        <div class="hud-actions">
+          <button id="mainMenuButton" type="button">Main Menu</button>
+          <button id="quitButton" class="primary-action" type="button">Quit</button>
         </div>
       </header>
       <div></div>
       <footer class="hud-footer">Dashboard UI placeholder: current build renders the prototype 3D scene.</footer>
     </main>
+    <script src="ui.js"></script>
+    <script>
+      function sendNative(command, payload = "") {
+        if (typeof window.solarisNativeCommand === "function") {
+          window.solarisNativeCommand(command, String(payload));
+        }
+      }
+
+      document.getElementById("mainMenuButton").addEventListener("click", () => {
+        sendNative("main_menu");
+      });
+
+      document.getElementById("quitButton").addEventListener("click", () => {
+        sendNative("quit");
+      });
+
+      function activateButton(button) {
+        if (button.id === "mainMenuButton") {
+          sendNative("main_menu");
+        } else if (button.id === "quitButton") {
+          sendNative("quit");
+        }
+      }
+
+      window.solarisUi.installButtonConfirmKeys({
+        activate: activateButton
+      });
+    </script>
   </body>
 </html>

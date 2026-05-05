@@ -302,6 +302,33 @@ DrainKeyboardInput()
   }
 }
 
+void
+InitializeUltralightPlatform()
+{
+  static const bool initialized = [] {
+    ultralight::Config config;
+    ultralight::Platform::instance().set_config(config);
+    ultralight::Platform::instance().set_font_loader(
+      ultralight::GetPlatformFontLoader());
+    const std::string assetPath = RuntimeAssetPath().string();
+    ultralight::Platform::instance().set_file_system(
+      ultralight::GetPlatformFileSystem(assetPath.c_str()));
+    ultralight::Platform::instance().set_logger(
+      ultralight::GetDefaultLogger("ultralight.log"));
+    return true;
+  }();
+  (void)initialized;
+}
+
+[[nodiscard]] ultralight::RefPtr<ultralight::Renderer>
+SharedUltralightRenderer()
+{
+  InitializeUltralightPlatform();
+  static ultralight::RefPtr<ultralight::Renderer> renderer =
+    ultralight::Renderer::Create();
+  return renderer;
+}
+
 }
 
 class WebOverlay::Impl final
@@ -324,17 +351,7 @@ public:
     , texture(LoadBlankTexture(overlayWidth, overlayHeight))
     , uploadPixels(static_cast<std::size_t>(overlayWidth * overlayHeight * 4))
   {
-    ultralight::Config config;
-    ultralight::Platform::instance().set_config(config);
-    ultralight::Platform::instance().set_font_loader(
-      ultralight::GetPlatformFontLoader());
-    const std::string assetPath = RuntimeAssetPath().string();
-    ultralight::Platform::instance().set_file_system(
-      ultralight::GetPlatformFileSystem(assetPath.c_str()));
-    ultralight::Platform::instance().set_logger(
-      ultralight::GetDefaultLogger("ultralight.log"));
-
-    renderer = ultralight::Renderer::Create();
+    renderer = SharedUltralightRenderer();
 
     ultralight::ViewConfig viewConfig;
     viewConfig.is_accelerated = false;

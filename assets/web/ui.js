@@ -9,6 +9,68 @@
     return !!root && !!element && root.contains(element);
   }
 
+  function keyName(event) {
+    var key = (event.key || "").toLowerCase();
+    if (key) {
+      if (key === " " || key === "spacebar") {
+        return "space";
+      }
+      if (key === "esc") {
+        return "escape";
+      }
+      return key;
+    }
+
+    var keyIdentifier = (event.keyIdentifier || "").toLowerCase();
+    if (keyIdentifier === "u+000d") {
+      return "enter";
+    }
+    if (keyIdentifier === "u+0020") {
+      return "space";
+    }
+    if (keyIdentifier === "u+001b") {
+      return "escape";
+    }
+
+    var code = event.keyCode || event.which || event.charCode || 0;
+    if (code === 13) {
+      return "enter";
+    }
+    if (code === 32) {
+      return "space";
+    }
+    if (code === 27) {
+      return "escape";
+    }
+    return "";
+  }
+
+  function isConfirmKey(event) {
+    var key = keyName(event);
+    return key === "enter";
+  }
+
+  function installButtonConfirmKeys(options) {
+    var settings = options || {};
+    var target = settings.root || document;
+    var activate = settings.activate || function(button) {
+      button.click();
+    };
+    target.addEventListener("keydown", function(event) {
+      if (event.defaultPrevented || !isConfirmKey(event)) {
+        return;
+      }
+
+      var active = activeHtmlElement();
+      if (!active || active.tagName !== "BUTTON" || active.disabled) {
+        return;
+      }
+
+      event.preventDefault();
+      activate(active);
+    });
+  }
+
   function createModal(options) {
     var modal = options.modal;
     var defaultFocus = options.defaultFocus || modal;
@@ -166,6 +228,9 @@
 
   window.solarisUi = {
     createConfirmDialog: createConfirmDialog,
-    createModal: createModal
+    createModal: createModal,
+    installButtonConfirmKeys: installButtonConfirmKeys,
+    isConfirmKey: isConfirmKey,
+    keyName: keyName
   };
 })();

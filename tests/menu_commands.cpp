@@ -88,6 +88,32 @@ CheckMuteParsing()
   return 0;
 }
 
+[[nodiscard]] int
+CheckShowFpsParsing()
+{
+  const solaris::MainMenuCommand visible =
+    solaris::ParseMainMenuCommand("set_show_fps", "on");
+  if (visible.kind != solaris::MainMenuCommandKind::SetShowFps ||
+      !visible.showFps) {
+    return Fail("expected on show-fps payload to parse");
+  }
+
+  const solaris::MainMenuCommand hidden =
+    solaris::ParseMainMenuCommand("set_show_fps", "false");
+  if (hidden.kind != solaris::MainMenuCommandKind::SetShowFps ||
+      hidden.showFps) {
+    return Fail("expected false show-fps payload to parse");
+  }
+
+  const solaris::MainMenuCommand invalid =
+    solaris::ParseMainMenuCommand("set_show_fps", "sometimes");
+  if (invalid.kind != solaris::MainMenuCommandKind::Unknown) {
+    return Fail("expected invalid show-fps payload to be ignored");
+  }
+
+  return 0;
+}
+
 }
 
 int
@@ -100,6 +126,9 @@ main()
     return result;
   }
   if (const int result = CheckMuteParsing(); result != 0) {
+    return result;
+  }
+  if (const int result = CheckShowFpsParsing(); result != 0) {
     return result;
   }
 

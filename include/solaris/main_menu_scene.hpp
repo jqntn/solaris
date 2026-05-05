@@ -14,7 +14,7 @@ class Renderer;
 class MainMenuScene final : public machina::Scene
 {
 public:
-  explicit MainMenuScene(machina::Renderer& renderer);
+  explicit MainMenuScene(machina::Renderer& renderer, bool& showFps);
   ~MainMenuScene() override;
 
   void Update(machina::SceneStack& scenes) override;
@@ -28,6 +28,7 @@ private:
   void SetMenuStatus(std::string_view tone, std::string_view message) const;
 
   machina::Renderer& renderer;
+  bool& showFps;
   std::unique_ptr<machina::WebOverlay> webOverlay;
   Music music = Music{};
   float musicVolume = 0.72f;

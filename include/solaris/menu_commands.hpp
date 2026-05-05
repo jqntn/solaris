@@ -11,6 +11,7 @@ enum class MainMenuCommandKind
   Quit,
   SetMusicVolume,
   SetMusicMuted,
+  SetShowFps,
 };
 
 struct MainMenuCommand
@@ -18,6 +19,7 @@ struct MainMenuCommand
   MainMenuCommandKind kind = MainMenuCommandKind::Unknown;
   float musicVolume = 0.0f;
   bool musicMuted = false;
+  bool showFps = false;
 };
 
 [[nodiscard]] MainMenuCommand

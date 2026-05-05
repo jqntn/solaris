@@ -19,22 +19,32 @@ public:
     std::vector<machina::Diagnostic> diagnostics;
   };
 
-  [[nodiscard]] static CreateResult Create(machina::Renderer& renderer);
+  [[nodiscard]] static CreateResult Create(machina::Renderer& renderer,
+                                           bool& showFps);
 
 private:
   struct ConstructorTag
   {};
 
 public:
-  GameScene(ConstructorTag, entt::registry registry);
+  GameScene(ConstructorTag,
+            machina::Renderer& renderer,
+            bool& showFps,
+            entt::registry registry);
 
   void Update(machina::SceneStack& scenes) override;
   void Draw(machina::SceneDrawContext& context) override;
   void DrawUi() override;
 
 private:
+  void HandleWebCommand(std::string command, std::string payload);
+
+  machina::Renderer& renderer;
+  bool& showFps;
   entt::registry registry;
   std::unique_ptr<machina::WebOverlay> webOverlay;
   machina::StrategicCameraController cameraController;
   Camera camera = Camera{};
+  bool mainMenuRequested = false;
+  bool quitRequested = false;
 };

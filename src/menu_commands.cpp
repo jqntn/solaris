@@ -66,6 +66,16 @@ ParseMainMenuCommand(std::string_view command, std::string_view payload)
                             .musicMuted = muted };
   }
 
+  if (command == "set_show_fps") {
+    bool showFps = false;
+    if (!ParseBool(payload, showFps)) {
+      return MainMenuCommand{};
+    }
+
+    return MainMenuCommand{ .kind = MainMenuCommandKind::SetShowFps,
+                            .showFps = showFps };
+  }
+
   return MainMenuCommand{};
 }
 
