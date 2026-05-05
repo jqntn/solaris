@@ -66,6 +66,83 @@
     return key === "enter";
   }
 
+  function directionalFocusKey(event) {
+    var key = (event.key || "").toLowerCase();
+    if (key === "arrowleft" || key === "left") {
+      return "arrowleft";
+    }
+    if (key === "arrowright" || key === "right") {
+      return "arrowright";
+    }
+    if (key === "arrowup" || key === "up") {
+      return "arrowup";
+    }
+    if (key === "arrowdown" || key === "down") {
+      return "arrowdown";
+    }
+
+    var eventCode = (event.code || "").toLowerCase();
+    if (eventCode === "arrowleft") {
+      return "arrowleft";
+    }
+    if (eventCode === "arrowright") {
+      return "arrowright";
+    }
+    if (eventCode === "arrowup") {
+      return "arrowup";
+    }
+    if (eventCode === "arrowdown") {
+      return "arrowdown";
+    }
+
+    var keyIdentifier = (event.keyIdentifier || "").toLowerCase();
+    if (keyIdentifier === "left" || keyIdentifier === "u+0025") {
+      return "arrowleft";
+    }
+    if (keyIdentifier === "right" || keyIdentifier === "u+0027") {
+      return "arrowright";
+    }
+    if (keyIdentifier === "up" || keyIdentifier === "u+0026") {
+      return "arrowup";
+    }
+    if (keyIdentifier === "down" || keyIdentifier === "u+0028") {
+      return "arrowdown";
+    }
+
+    var code = event.keyCode || event.which || event.charCode || 0;
+    if (code === 37) {
+      return "arrowleft";
+    }
+    if (code === 39) {
+      return "arrowright";
+    }
+    if (code === 38) {
+      return "arrowup";
+    }
+    if (code === 40) {
+      return "arrowdown";
+    }
+    return "";
+  }
+
+  function moveDirectionalFocus(event, items, options) {
+    var settings = options || {};
+    var key = directionalFocusKey(event);
+    if (key !== settings.previousKey && key !== settings.nextKey) {
+      return false;
+    }
+
+    var activeIndex = items.indexOf(document.activeElement);
+    if (activeIndex < 0 || !keyboardFocusVisible) {
+      return false;
+    }
+
+    event.preventDefault();
+    var step = key === settings.nextKey ? 1 : -1;
+    items[(activeIndex + items.length + step) % items.length].focus();
+    return true;
+  }
+
   function installButtonConfirmKeys(options) {
     var settings = options || {};
     var target = settings.root || document;
@@ -135,6 +212,7 @@
     var cancelButton = options.cancelButton;
     var confirmButton = options.confirmButton;
     var onConfirm = options.onConfirm || function() {};
+    var dialogButtons = [cancelButton, confirmButton];
 
     cancelButton.addEventListener("click", modal.close);
     confirmButton.addEventListener("click", onConfirm);
@@ -147,12 +225,6 @@
       if (key === "enter" || key === "return" || key === "u+000d") {
         return "enter";
       }
-      if (key === "arrowleft" || key === "left") {
-        return "arrowleft";
-      }
-      if (key === "arrowright" || key === "right") {
-        return "arrowright";
-      }
 
       var eventCode = (event.code || "").toLowerCase();
       if (eventCode === "escape") {
@@ -160,12 +232,6 @@
       }
       if (eventCode === "enter" || eventCode === "numpadenter") {
         return "enter";
-      }
-      if (eventCode === "arrowleft") {
-        return "arrowleft";
-      }
-      if (eventCode === "arrowright") {
-        return "arrowright";
       }
 
       var keyIdentifier = (event.keyIdentifier || "").toLowerCase();
@@ -176,25 +242,12 @@
         return "enter";
       }
 
-      if (keyIdentifier === "left" || keyIdentifier === "u+0025") {
-        return "arrowleft";
-      }
-      if (keyIdentifier === "right" || keyIdentifier === "u+0027") {
-        return "arrowright";
-      }
-
       var code = event.keyCode || event.which || event.charCode || 0;
       if (code === 13) {
         return "enter";
       }
       if (code === 27) {
         return "escape";
-      }
-      if (code === 37) {
-        return "arrowleft";
-      }
-      if (code === 39) {
-        return "arrowright";
       }
       return "";
     }
@@ -212,8 +265,13 @@
       }
 
       if (key === "enter") {
+        var active = document.activeElement;
+        if (active !== cancelButton && active !== confirmButton) {
+          return true;
+        }
+
         event.preventDefault();
-        if (activeHtmlElement() === confirmButton) {
+        if (active === confirmButton) {
           onConfirm();
         } else {
           modal.close();
@@ -221,18 +279,14 @@
         return true;
       }
 
-      if (key === "arrowleft" || key === "arrowright") {
-        var active = document.activeElement;
-        if ((active !== cancelButton && active !== confirmButton) || !keyboardFocusVisible) {
-          return true;
-        }
+      if (moveDirectionalFocus(event, dialogButtons, {
+        nextKey: "arrowright",
+        previousKey: "arrowleft"
+      })) {
+        return true;
+      }
 
-        event.preventDefault();
-        if (active === confirmButton) {
-          cancelButton.focus();
-        } else {
-          confirmButton.focus();
-        }
+      if (directionalFocusKey(event)) {
         return true;
       }
 
@@ -266,11 +320,13 @@
   window.solarisUi = {
     createConfirmDialog: createConfirmDialog,
     createModal: createModal,
+    directionalFocusKey: directionalFocusKey,
     hasKeyboardFocusVisible: function() {
       return keyboardFocusVisible;
     },
     installButtonConfirmKeys: installButtonConfirmKeys,
     isConfirmKey: isConfirmKey,
-    keyName: keyName
+    keyName: keyName,
+    moveDirectionalFocus: moveDirectionalFocus
   };
 })();
