@@ -134,6 +134,10 @@ function(machina_copy_assets target)
         COMMAND "${CMAKE_COMMAND}" -E copy_directory
                 "${MACHINA_ASSETS_SOURCE_DIR}"
                 "$<TARGET_FILE_DIR:${target}>/${MACHINA_ASSETS_RUNTIME_ROOT}"
+        COMMAND "${CMAKE_COMMAND}"
+                "-DMACHINA_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
+                "-DMACHINA_BUILD_INFO_OUTPUT=$<TARGET_FILE_DIR:${target}>/${MACHINA_ASSETS_RUNTIME_ROOT}/web/build-info.js"
+                -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/write_build_info.cmake"
         COMMENT "Copying assets for ${target}")
     add_dependencies("${target}" "${target}_assets")
 endfunction()

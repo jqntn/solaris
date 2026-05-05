@@ -303,7 +303,7 @@
         </nav>
 
         <div class="footer-line">
-          <span>local build</span>
+          <span id="buildRevision">local build</span>
           <span class="status-pill" id="nativeStatus" data-tone="ready">Ready</span>
         </div>
       </section>
@@ -370,8 +370,14 @@
       </section>
     </div>
 
+    <script src="build-info.js"></script>
     <script src="ui.js"></script>
     <script>
+      const buildRevisionEl = document.getElementById("buildRevision");
+      if (window.solarisBuild && window.solarisBuild.revision) {
+        buildRevisionEl.textContent = window.solarisBuild.revision;
+      }
+
       const statusEl = document.getElementById("viewStatus");
       const nativeStatusEl = document.getElementById("nativeStatus");
       const viewTitleEl = document.getElementById("viewTitle");
