@@ -166,7 +166,7 @@
 
   function createModal(options) {
     var modal = options.modal;
-    var defaultFocus = options.defaultFocus || modal;
+    var defaultFocus = options.defaultFocus || null;
     var returnFocus = null;
 
     function isOpen() {
@@ -181,7 +181,11 @@
       returnFocus = activeHtmlElement();
       modal.classList.add("is-active");
       modal.setAttribute("aria-hidden", "false");
-      defaultFocus.focus();
+      if (defaultFocus) {
+        defaultFocus.focus();
+      } else if (returnFocus && typeof returnFocus.blur === "function") {
+        returnFocus.blur();
+      }
     }
 
     function close() {
@@ -206,8 +210,7 @@
 
   function createConfirmDialog(options) {
     var modal = createModal({
-      modal: options.modal,
-      defaultFocus: options.cancelButton
+      modal: options.modal
     });
     var cancelButton = options.cancelButton;
     var confirmButton = options.confirmButton;
@@ -252,9 +255,26 @@
       return "";
     }
 
+    function focusDialogButton(reverse) {
+      var activeIndex = dialogButtons.indexOf(document.activeElement);
+      if (activeIndex < 0) {
+        dialogButtons[reverse ? dialogButtons.length - 1 : 0].focus();
+        return;
+      }
+
+      var step = reverse ? -1 : 1;
+      dialogButtons[(activeIndex + dialogButtons.length + step) % dialogButtons.length].focus();
+    }
+
     function handleKeyDown(event) {
       if (!modal.isOpen()) {
         return false;
+      }
+
+      if (keyName(event) === "tab") {
+        event.preventDefault();
+        focusDialogButton(event.shiftKey);
+        return true;
       }
 
       var key = modalKey(event);
