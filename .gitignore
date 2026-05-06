@@ -420,3 +420,5 @@ FodyWeavers.xsd
 vcpkg_installed/
 
 vendor/
+
+assets/web/build-info.js
