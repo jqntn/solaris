@@ -121,8 +121,9 @@
       }
 
       .view {
-        display: block;
-        min-height: 360px;
+        display: flex;
+        flex-direction: column;
+        height: 432px;
         padding: var(--space-5);
       }
 
@@ -222,7 +223,8 @@
         display: flex;
         flex-wrap: wrap;
         gap: var(--space-3);
-        margin-top: var(--space-4);
+        margin-top: auto;
+        padding-top: var(--space-4);
       }
 
       .view-actions button {
@@ -231,7 +233,7 @@
       }
 
       .view-actions button[aria-hidden="true"] {
-        visibility: hidden;
+        display: none;
       }
 
       .footer-line {
