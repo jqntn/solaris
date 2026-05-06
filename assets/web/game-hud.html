@@ -10,14 +10,17 @@
       }
 
       .hud-root {
-        width: 100%;
-        height: 100%;
-        display: grid;
-        grid-template-rows: auto 1fr auto;
-        padding: var(--space-4);
+        position: relative;
+        width: var(--ui-canvas-width);
+        height: var(--ui-canvas-height);
       }
 
       .hud-bar {
+        position: absolute;
+        left: 16px;
+        top: 16px;
+        right: 16px;
+        height: 56px;
         min-height: 56px;
         display: flex;
         align-items: center;
@@ -40,7 +43,7 @@
         margin: 0;
         color: var(--ink-high);
         font-family: var(--font-title);
-        font-size: 1.1rem;
+        font-size: 18px;
         font-weight: 600;
       }
 
@@ -71,33 +74,37 @@
       }
 
       .hud-footer {
-        justify-self: end;
-        max-width: 360px;
+        position: absolute;
+        right: 16px;
+        bottom: 16px;
+        width: 360px;
         padding: var(--space-3) var(--space-4);
         border: 1px solid var(--line);
         border-radius: var(--radius);
         background: rgba(7, 11, 16, 0.62);
         color: var(--ink-muted);
-        font-size: 0.9rem;
+        font-size: 14px;
         box-shadow: 0 14px 34px var(--shadow);
       }
     </style>
   </head>
-  <body>
-    <main class="hud-root">
-      <header class="hud-bar">
-        <div class="hud-brand">
-          <h1 class="hud-title">SOLARIS</h1>
-          <span class="status-pill" data-tone="ready">Prototype scene</span>
-        </div>
-        <div class="hud-actions">
-          <button id="mainMenuButton" type="button">Main Menu</button>
-          <button id="quitButton" class="primary-action" type="button">Quit</button>
-        </div>
-      </header>
-      <div></div>
-      <footer class="hud-footer">Dashboard UI placeholder: current build renders the prototype 3D scene.</footer>
-    </main>
+  <body class="ui-scale-page">
+    <div class="ui-scale-stage">
+      <main class="hud-root">
+        <header class="hud-bar">
+          <div class="hud-brand">
+            <h1 class="hud-title">SOLARIS</h1>
+            <span class="status-pill" data-tone="ready">Prototype scene</span>
+          </div>
+          <div class="hud-actions">
+            <button id="mainMenuButton" type="button">Main Menu</button>
+            <button id="quitButton" class="primary-action" type="button">Quit</button>
+          </div>
+        </header>
+        <div></div>
+        <footer class="hud-footer">Dashboard UI placeholder: current build renders the prototype 3D scene.</footer>
+      </main>
+    </div>
     <script src="ui.js"></script>
     <script>
       function sendNative(command, payload = "") {

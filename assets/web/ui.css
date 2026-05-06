@@ -20,6 +20,11 @@
 }
 
 :root {
+  --ui-reference-width: 2560px;
+  --ui-reference-height: 1600px;
+  --ui-canvas-width: var(--ui-reference-width);
+  --ui-canvas-height: var(--ui-reference-height);
+  --ui-scale: 1;
   --font-title: "Solaris Orbitron", "Segoe UI", sans-serif;
   --font-ui: "Solaris Titillium", "Segoe UI", sans-serif;
   --ink-high: #f4f8fb;
@@ -64,6 +69,19 @@ body {
   -webkit-user-select: none;
 }
 
+.ui-scale-page {
+  overflow: hidden;
+}
+
+.ui-scale-stage {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: var(--ui-canvas-width);
+  height: var(--ui-canvas-height);
+  zoom: var(--ui-scale);
+}
+
 button {
   font: inherit;
 }
@@ -99,7 +117,7 @@ button[disabled],
 .eyebrow {
   margin: 0;
   color: var(--ink-muted);
-  font-size: 0.78rem;
+  font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -107,14 +125,14 @@ button[disabled],
 .panel-title {
   margin: 0;
   color: var(--ink-high);
-  font-size: 1.15rem;
+  font-size: 18px;
   font-weight: 600;
 }
 
 .body-copy {
   margin: 0;
   color: var(--ink-muted);
-  line-height: 1.45;
+  line-height: 23px;
 }
 
 .status-pill {
@@ -126,7 +144,7 @@ button[disabled],
   border: 1px solid var(--line);
   border-radius: 999px;
   color: var(--ink-muted);
-  font-size: 0.82rem;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -146,7 +164,7 @@ button[disabled],
 }
 
 .ui-modal {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 20;
   display: none;
@@ -162,7 +180,7 @@ button[disabled],
 }
 
 .ui-dialog {
-  width: min(100%, 420px);
+  width: 420px;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   background: rgba(6, 12, 17, 0.96);

@@ -1,4 +1,25 @@
 (function() {
+  var referenceWidth = 2560;
+  var referenceHeight = 1600;
+
+  function updateScreenHeightScale() {
+    if (!document.querySelector(".ui-scale-stage")) {
+      return;
+    }
+
+    var viewportWidth = window.innerWidth || document.documentElement.clientWidth || referenceWidth;
+    var viewportHeight = window.innerHeight || document.documentElement.clientHeight || referenceHeight;
+    var scale = viewportHeight / referenceHeight;
+    if (!isFinite(scale) || scale <= 0) {
+      scale = 1;
+    }
+
+    var canvasWidth = Math.round(viewportWidth / scale);
+    document.documentElement.style.setProperty("--ui-scale", String(scale));
+    document.documentElement.style.setProperty("--ui-canvas-width", canvasWidth + "px");
+    document.documentElement.style.setProperty("--ui-canvas-height", referenceHeight + "px");
+  }
+
   function activeHtmlElement() {
     return document.activeElement instanceof HTMLElement
       ? document.activeElement
@@ -335,6 +356,8 @@
     setKeyboardFocusVisible(false);
   });
 
+  window.addEventListener("resize", updateScreenHeightScale);
+  updateScreenHeightScale();
   setKeyboardFocusVisible(false);
 
   window.solarisUi = {
