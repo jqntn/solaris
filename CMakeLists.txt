@@ -37,6 +37,7 @@ set(USD_ROOT "${nvidia_usd_SOURCE_DIR}")
 set(ULTRALIGHT_ROOT "${CMAKE_SOURCE_DIR}/vendor/ultralight-free-sdk-1.4.0-win-x64")
 set(ASSETS_RUNTIME_ROOT assets)
 set(MATERIALX_RUNTIME_ROOT materialx)
+set(ULTRALIGHT_RUNTIME_ROOT ultralight)
 
 set(USD_LIBS
     usd_usdShade
@@ -126,7 +127,8 @@ target_include_directories(machina_engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/in
 target_compile_features(machina_engine PUBLIC cxx_std_23)
 target_compile_definitions(machina_engine PUBLIC
     MACHINA_ASSETS_ROOT="${ASSETS_RUNTIME_ROOT}"
-    MACHINA_MATERIALX_LIBRARY_ROOT="${MATERIALX_RUNTIME_ROOT}")
+    MACHINA_MATERIALX_LIBRARY_ROOT="${MATERIALX_RUNTIME_ROOT}"
+    MACHINA_ULTRALIGHT_ROOT="${ULTRALIGHT_RUNTIME_ROOT}")
 target_link_libraries(machina_engine PUBLIC raylib EnTT::EnTT nvidia_usd ultralight)
 
 add_executable(solaris
@@ -164,13 +166,9 @@ add_custom_target(build_info ALL
 add_dependencies(solaris build_info)
 
 # Runtime symlinks
-file(GLOB ASSETS_CHILDREN
-    RELATIVE "${CMAKE_SOURCE_DIR}/assets"
-    CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/assets/*")
-
 foreach(cfg IN LISTS CMAKE_CONFIGURATION_TYPES)
     set(rt "${CMAKE_BINARY_DIR}/${cfg}")
-    file(MAKE_DIRECTORY "${rt}/${ASSETS_RUNTIME_ROOT}" "${rt}/usd" "${rt}/${MATERIALX_RUNTIME_ROOT}")
+    file(MAKE_DIRECTORY "${rt}/usd" "${rt}/${MATERIALX_RUNTIME_ROOT}" "${rt}/${ULTRALIGHT_RUNTIME_ROOT}")
 
     foreach(dll IN LISTS USD_DLLS)
         get_filename_component(name "${dll}" NAME)
@@ -184,15 +182,13 @@ foreach(cfg IN LISTS CMAKE_CONFIGURATION_TYPES)
         file(CREATE_LINK "${ULTRALIGHT_ROOT}/${dll}" "${rt}/${name}" SYMBOLIC)
     endforeach()
 
-    foreach(child IN LISTS ASSETS_CHILDREN)
-        file(REMOVE "${rt}/${ASSETS_RUNTIME_ROOT}/${child}")
-        file(CREATE_LINK "${CMAKE_SOURCE_DIR}/assets/${child}"
-                         "${rt}/${ASSETS_RUNTIME_ROOT}/${child}" SYMBOLIC)
-    endforeach()
+    file(REMOVE "${rt}/${ASSETS_RUNTIME_ROOT}")
+    file(CREATE_LINK "${CMAKE_SOURCE_DIR}/assets"
+                     "${rt}/${ASSETS_RUNTIME_ROOT}" SYMBOLIC)
 
-    file(REMOVE "${rt}/${ASSETS_RUNTIME_ROOT}/resources")
+    file(REMOVE "${rt}/${ULTRALIGHT_RUNTIME_ROOT}/resources")
     file(CREATE_LINK "${ULTRALIGHT_ROOT}/resources"
-                     "${rt}/${ASSETS_RUNTIME_ROOT}/resources" SYMBOLIC)
+                     "${rt}/${ULTRALIGHT_RUNTIME_ROOT}/resources" SYMBOLIC)
 
     file(REMOVE "${rt}/usd/plugInfo.json")
     file(CREATE_LINK "${USD_ROOT}/lib/usd/plugInfo.json"
@@ -230,7 +226,7 @@ include(InstallRequiredSystemLibraries)
 
 install(TARGETS solaris RUNTIME DESTINATION .)
 install(DIRECTORY assets/ DESTINATION "${ASSETS_RUNTIME_ROOT}")
-install(DIRECTORY "${ULTRALIGHT_ROOT}/resources/" DESTINATION "${ASSETS_RUNTIME_ROOT}/resources")
+install(DIRECTORY "${ULTRALIGHT_ROOT}/resources/" DESTINATION "${ULTRALIGHT_RUNTIME_ROOT}/resources")
 
 foreach(dll IN LISTS USD_DLLS)
     install(FILES "${USD_ROOT}/${dll}" DESTINATION .)

@@ -306,15 +306,23 @@ void
 InitializeUltralightPlatform()
 {
   static const bool initialized = [] {
+    const std::filesystem::path ultralightDir =
+      ApplicationDirectory() / MACHINA_ULTRALIGHT_ROOT;
+    const std::string ultralightCachePath = ultralightDir.string();
+    const std::string ultralightLogPath =
+      (ultralightDir / "ultralight.log").string();
+    const std::string vfsRoot = ApplicationDirectory().string();
+
     ultralight::Config config;
+    config.cache_path = ultralightCachePath.c_str();
+    config.resource_path_prefix = MACHINA_ULTRALIGHT_ROOT "/resources/";
     ultralight::Platform::instance().set_config(config);
     ultralight::Platform::instance().set_font_loader(
       ultralight::GetPlatformFontLoader());
-    const std::string assetPath = RuntimeAssetPath().string();
     ultralight::Platform::instance().set_file_system(
-      ultralight::GetPlatformFileSystem(assetPath.c_str()));
+      ultralight::GetPlatformFileSystem(vfsRoot.c_str()));
     ultralight::Platform::instance().set_logger(
-      ultralight::GetDefaultLogger("ultralight.log"));
+      ultralight::GetDefaultLogger(ultralightLogPath.c_str()));
     return true;
   }();
   (void)initialized;

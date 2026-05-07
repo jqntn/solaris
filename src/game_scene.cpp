@@ -33,7 +33,7 @@ GameScene::GameScene(ConstructorTag,
       0,
       GetScreenWidth(),
       GetScreenHeight(),
-      "file:///web/game-hud.html",
+      "file:///" MACHINA_ASSETS_ROOT "/web/game-hud.html",
       [this](std::string command, std::string payload) {
         HandleWebCommand(std::move(command), std::move(payload));
       }))

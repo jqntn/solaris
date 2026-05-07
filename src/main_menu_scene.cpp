@@ -69,7 +69,7 @@ MainMenuScene::MainMenuScene(machina::Renderer& renderer, bool& showFps)
       0,
       GetScreenWidth(),
       GetScreenHeight(),
-      "file:///web/main-menu.html",
+      "file:///" MACHINA_ASSETS_ROOT "/web/main-menu.html",
       [this](std::string command, std::string payload) {
         HandleWebCommand(std::move(command), std::move(payload));
       }))

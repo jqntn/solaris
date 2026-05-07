@@ -4,9 +4,7 @@
 
 namespace machina {
 
-namespace {
-
-[[nodiscard]] std::filesystem::path
+std::filesystem::path
 ApplicationDirectory()
 {
   const char* directory = GetApplicationDirectory();
@@ -16,6 +14,8 @@ ApplicationDirectory()
 
   return std::filesystem::path(directory);
 }
+
+namespace {
 
 [[nodiscard]] std::filesystem::path
 RuntimePath(const char* relativePath)
