@@ -373,7 +373,7 @@
     <script src="build-info.js"></script>
     <script src="ui.js"></script>
     <script>
-      const { sendNative, createConfirmDialog, installButtonConfirmKeys, moveDirectionalFocus } = window.solarisUi;
+      const { sendNative, createConfirmDialog, installButtonConfirmKeys, isEscapeKey, moveDirectionalFocus } = window.solarisUi;
 
       const buildRevisionEl = document.getElementById("buildRevision");
       buildRevisionEl.textContent = window.solarisBuild.revision;
@@ -637,7 +637,7 @@
         }
 
         const continueButton = document.querySelector('[data-command="continue_game"]');
-        const key = event.key.toLowerCase();
+        const key = isEscapeKey(event) ? "escape" : event.key.toLowerCase();
         const shortcuts = {
           c: () => { if (!continueButton.disabled) runCommand("continue_game"); },
           l: () => showPanel("load"),

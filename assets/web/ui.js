@@ -29,6 +29,8 @@
 
   const isConfirmKey = (event) => event.key === "Enter";
 
+  const isEscapeKey = (event) => event.key === "Escape" || event.keyCode === 27;
+
   const directionalFocusKey = (event) => {
     if (event.key === "ArrowLeft") return "arrowleft";
     if (event.key === "ArrowRight") return "arrowright";
@@ -100,7 +102,7 @@
       if (event.key === "Tab") {
         event.preventDefault();
         focusDialogButton(event.shiftKey);
-      } else if (event.key === "Escape") {
+      } else if (isEscapeKey(event)) {
         event.preventDefault();
         modal.close();
       } else if (event.key === "Enter") {
@@ -138,6 +140,7 @@
     hasKeyboardFocusVisible,
     installButtonConfirmKeys,
     isConfirmKey,
+    isEscapeKey,
     keyName,
     moveDirectionalFocus,
     sendNative
