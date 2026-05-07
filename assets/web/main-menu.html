@@ -76,6 +76,16 @@
         color: var(--accent-strong);
       }
 
+      .nav-button:disabled {
+        border-color: var(--line);
+        color: var(--ink-muted);
+        cursor: not-allowed;
+      }
+
+      .nav-button:disabled::after {
+        color: var(--ink-dim);
+      }
+
       .primary-action {
         border-color: rgba(143, 215, 255, 0.52);
         background: rgba(24, 75, 99, 0.82);
@@ -289,7 +299,7 @@
 
           <nav class="main-nav" aria-label="Main menu">
             <button class="nav-button primary-action" id="newGameButton" data-key="N" data-command="new_game">New Game</button>
-            <button class="nav-button" data-key="C" data-view="continue">Continue</button>
+            <button class="nav-button" data-key="C" data-command="continue_game" disabled>Continue</button>
             <button class="nav-button" data-key="L" data-view="load">Load</button>
             <button class="nav-button" data-key="S" data-view="settings">Settings</button>
             <button class="nav-button" data-key="R" data-view="credits">Credits</button>
@@ -428,23 +438,6 @@
       window.solarisMenuSetStatus = setStatus;
 
       function panelContent(panelName) {
-        if (panelName === "continue") {
-          return {
-            name: "continue",
-            meta: ["Campaign record", "Continue", "No resume point"],
-            rows: [
-              ["Resume point", "No campaign resume point"],
-              ["Save persistence", "Unavailable in this build"],
-              ["Available action", "Start a new prototype session"],
-              ["Prototype target", "Current 3D scene"]
-            ],
-            actions: [
-              { label: "Start New Game", command: "new_game", primary: true },
-              { label: "Back", action: "close_panel" }
-            ]
-          };
-        }
-
         if (panelName === "load") {
           return {
             name: "load",
@@ -741,8 +734,9 @@
           return;
         }
 
+        const continueButton = document.querySelector('[data-command="continue_game"]');
         const shortcuts = {
-          c: () => showPanel("continue"),
+          c: () => { if (continueButton && !continueButton.disabled) runCommand("continue_game"); },
           l: () => showPanel("load"),
           n: () => runCommand("new_game"),
           s: () => showPanel("settings"),
