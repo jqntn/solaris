@@ -83,23 +83,26 @@ body {
 }
 
 button {
-  font: inherit;
-}
-
-button {
   min-height: 44px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(12, 23, 31, 0.7);
   color: var(--ink);
   cursor: pointer;
-}
+  font: inherit;
 
-button:hover,
-button:focus {
-  border-color: var(--line-strong);
-  color: var(--ink-high);
-  outline: 0;
+  &:hover,
+  &:focus {
+    border-color: var(--line-strong);
+    color: var(--ink-high);
+    outline: 0;
+  }
+
+  &[disabled] {
+    border-color: rgba(120, 139, 150, 0.16);
+    color: var(--ink-dim);
+    cursor: default;
+  }
 }
 
 html[data-keyboard-focus="true"] button:focus {
@@ -107,7 +110,6 @@ html[data-keyboard-focus="true"] button:focus {
   outline-offset: 2px;
 }
 
-button[disabled],
 .is-disabled {
   border-color: rgba(120, 139, 150, 0.16);
   color: var(--ink-dim);
@@ -146,21 +148,21 @@ button[disabled],
   color: var(--ink-muted);
   font-size: 13px;
   font-weight: 600;
-}
 
-.status-pill[data-tone="ready"] {
-  border-color: rgba(128, 216, 162, 0.42);
-  color: var(--confirm);
-}
+  &[data-tone="ready"] {
+    border-color: rgba(128, 216, 162, 0.42);
+    color: var(--confirm);
+  }
 
-.status-pill[data-tone="loading"] {
-  border-color: rgba(232, 193, 108, 0.46);
-  color: var(--warn);
-}
+  &[data-tone="loading"] {
+    border-color: rgba(232, 193, 108, 0.46);
+    color: var(--warn);
+  }
 
-.status-pill[data-tone="error"] {
-  border-color: rgba(236, 126, 126, 0.5);
-  color: var(--danger);
+  &[data-tone="error"] {
+    border-color: rgba(236, 126, 126, 0.5);
+    color: var(--danger);
+  }
 }
 
 .ui-modal {
@@ -171,12 +173,12 @@ button[disabled],
   place-items: center;
   padding: var(--space-4);
   background: rgba(2, 6, 10, 0.72);
-}
 
-.ui-modal.is-active {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  &.is-active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 .ui-dialog {
@@ -185,28 +187,28 @@ button[disabled],
   border-radius: var(--radius);
   background: rgba(6, 12, 17, 0.96);
   box-shadow: 0 20px 60px var(--shadow);
-}
 
-.ui-dialog header {
-  padding: var(--space-4) var(--space-5);
-  border-bottom: 1px solid var(--line);
+  & header {
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--line);
+  }
 }
 
 .ui-dialog-body {
   padding: var(--space-5);
-}
 
-.ui-dialog-body .body-copy {
-  margin-bottom: var(--space-3);
+  & .body-copy {
+    margin-bottom: var(--space-3);
+  }
 }
 
 .ui-dialog-actions {
   display: flex;
   justify-content: flex-end;
   gap: var(--space-3);
-}
 
-.ui-dialog-actions button {
-  min-width: 108px;
-  padding: 0 var(--space-4);
+  & button {
+    min-width: 108px;
+    padding: 0 var(--space-4);
+  }
 }

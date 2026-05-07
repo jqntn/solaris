@@ -1,8 +1,9 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Solaris — Main Menu</title>
     <link rel="stylesheet" href="ui.css">
     <style>
       body {
@@ -18,10 +19,6 @@
         position: relative;
         width: var(--ui-canvas-width);
         height: var(--ui-canvas-height);
-      }
-
-      .view-column {
-        min-height: 0;
       }
 
       .brand-column {
@@ -62,28 +59,28 @@
         padding: 0 var(--space-4);
         background: rgba(7, 13, 18, 0.66);
         text-align: left;
-      }
 
-      .nav-button::after {
-        content: attr(data-key);
-        color: var(--ink-dim);
-        font-size: 13px;
-      }
+        &::after {
+          content: attr(data-key);
+          color: var(--ink-dim);
+          font-size: 13px;
+        }
 
-      .nav-button[data-active="true"] {
-        border-color: var(--line-strong);
-        background: rgba(26, 58, 73, 0.76);
-        color: var(--accent-strong);
-      }
+        &[data-active="true"] {
+          border-color: var(--line-strong);
+          background: rgba(26, 58, 73, 0.76);
+          color: var(--accent-strong);
+        }
 
-      .nav-button:disabled {
-        border-color: var(--line);
-        color: var(--ink-muted);
-        cursor: not-allowed;
-      }
+        &:disabled {
+          border-color: var(--line);
+          color: var(--ink-muted);
+          cursor: not-allowed;
 
-      .nav-button:disabled::after {
-        color: var(--ink-dim);
+          &::after {
+            color: var(--ink-dim);
+          }
+        }
       }
 
       .primary-action {
@@ -98,14 +95,15 @@
         left: 476px;
         top: 640px;
         width: 720px;
+        min-height: 0;
         display: flex;
         align-items: flex-start;
         justify-content: flex-start;
-      }
 
-      .view-column[data-open="false"] {
-        visibility: hidden;
-        pointer-events: none;
+        &[data-open="false"] {
+          visibility: hidden;
+          pointer-events: none;
+        }
       }
 
       .view-shell {
@@ -149,18 +147,22 @@
         border: 1px solid rgba(163, 197, 214, 0.16);
         border-radius: var(--radius);
         background: rgba(255, 255, 255, 0.035);
-      }
 
-      .detail-row + .detail-row {
-        margin-top: var(--space-3);
-      }
+        & + & {
+          margin-top: var(--space-3);
+        }
 
-      .detail-row > span:last-child {
-        text-align: right;
-      }
+        & > span:last-child {
+          text-align: right;
+        }
 
-      .detail-row.is-empty {
-        visibility: hidden;
+        &.is-empty {
+          visibility: hidden;
+        }
+
+        &.is-readonly {
+          color: var(--ink-dim);
+        }
       }
 
       .row-label {
@@ -185,46 +187,42 @@
         border: 1px solid rgba(163, 197, 214, 0.2);
         border-radius: 6px;
         background: rgba(7, 13, 18, 0.46);
-      }
 
-      .setting-control button {
-        min-height: 30px;
-        height: 30px;
-        border: 0;
-        border-radius: 0;
-        background: transparent;
-        color: var(--ink-muted);
-        font-size: 14px;
-        line-height: 14px;
-      }
+        & button {
+          min-height: 30px;
+          height: 30px;
+          border: 0;
+          border-radius: 0;
+          background: transparent;
+          color: var(--ink-muted);
+          font-size: 14px;
+          line-height: 14px;
 
-      .setting-control button + button {
-        border-left: 1px solid rgba(163, 197, 214, 0.16);
-      }
+          & + button {
+            border-left: 1px solid rgba(163, 197, 214, 0.16);
+          }
 
-      .setting-control button:hover,
-      .setting-control button:focus {
-        background: rgba(143, 215, 255, 0.12);
-        color: var(--ink-high);
-      }
+          &:hover,
+          &:focus {
+            background: rgba(143, 215, 255, 0.12);
+            color: var(--ink-high);
+          }
+        }
 
-      .setting-control .step-button {
-        width: 32px;
-        padding: 0;
-      }
+        & .step-button {
+          width: 32px;
+          padding: 0;
+        }
 
-      .setting-control .toggle-button {
-        min-width: 58px;
-        padding: 0 var(--space-2);
-      }
+        & .toggle-button {
+          min-width: 58px;
+          padding: 0 var(--space-2);
 
-      .setting-control .toggle-button[aria-pressed="true"] {
-        background: rgba(128, 216, 162, 0.12);
-        color: var(--confirm);
-      }
-
-      .detail-row.is-readonly {
-        color: var(--ink-dim);
+          &[data-pressed="true"] {
+            background: rgba(128, 216, 162, 0.12);
+            color: var(--confirm);
+          }
+        }
       }
 
       .view-actions {
@@ -233,15 +231,11 @@
         gap: var(--space-3);
         margin-top: auto;
         padding-top: var(--space-4);
-      }
 
-      .view-actions button {
-        min-width: 132px;
-        padding: 0 var(--space-4);
-      }
-
-      .view-actions button[aria-hidden="true"] {
-        display: none;
+        & button {
+          min-width: 132px;
+          padding: 0 var(--space-4);
+        }
       }
 
       .footer-line {
@@ -297,7 +291,7 @@
             <h1 class="title">SOLARIS</h1>
           </div>
 
-          <nav class="main-nav" aria-label="Main menu">
+          <nav class="main-nav">
             <button class="nav-button primary-action" id="newGameButton" data-key="N" data-command="new_game">New Game</button>
             <button class="nav-button" data-key="C" data-command="continue_game" disabled>Continue</button>
             <button class="nav-button" data-key="L" data-view="load">Load</button>
@@ -353,17 +347,17 @@
         </section>
       </main>
 
-      <div class="keyboard-hints" aria-label="Keyboard controls">
+      <div class="keyboard-hints">
         <span class="keyboard-hint"><span class="keycap">Tab</span> Focus</span>
         <span class="keyboard-hint"><span class="keycap">Esc</span> Back</span>
         <span class="keyboard-hint"><span class="keycap">Enter</span> Confirm</span>
       </div>
 
-      <div class="ui-modal" id="quitConfirm" role="presentation" aria-hidden="true">
-        <section class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="quitConfirmTitle">
+      <div class="ui-modal" id="quitConfirm">
+        <section class="ui-dialog">
           <header>
             <p class="eyebrow">Exit command</p>
-            <h2 class="panel-title" id="quitConfirmTitle">Quit Solaris?</h2>
+            <h2 class="panel-title">Quit Solaris?</h2>
           </header>
           <div class="ui-dialog-body">
             <p class="body-copy">Leave the current session and close the application.</p>
@@ -377,12 +371,16 @@
     </div>
 
     <script src="build-info.js"></script>
-    <script src="ui.js"></script>
-    <script>
+    <script type="module">
+      import {
+        sendNative,
+        createConfirmDialog,
+        installButtonConfirmKeys,
+        moveDirectionalFocus
+      } from './ui.js';
+
       const buildRevisionEl = document.getElementById("buildRevision");
-      if (window.solarisBuild && window.solarisBuild.revision) {
-        buildRevisionEl.textContent = window.solarisBuild.revision;
-      }
+      buildRevisionEl.textContent = window.solarisBuild.revision;
 
       const statusEl = document.getElementById("viewStatus");
       const nativeStatusEl = document.getElementById("nativeStatus");
@@ -408,20 +406,12 @@
       let menuMuted = false;
       let showFps = false;
 
-      const quitConfirm = window.solarisUi.createConfirmDialog({
+      const quitConfirm = createConfirmDialog({
         modal: document.getElementById("quitConfirm"),
         cancelButton: document.getElementById("cancelQuitButton"),
         confirmButton: document.getElementById("confirmQuitButton"),
-        onConfirm: () => {
-          sendNative("quit");
-        }
+        onConfirm: () => sendNative("quit")
       });
-
-      function sendNative(command, payload = "") {
-        if (typeof window.solarisNativeCommand === "function") {
-          window.solarisNativeCommand(command, String(payload));
-        }
-      }
 
       function setStatus(tone, message) {
         statusEl.dataset.tone = tone;
@@ -442,12 +432,8 @@
           return {
             name: "load",
             meta: ["Campaign archive", "Load", "No save slots"],
-            rows: [
-              ["Save slots", "No save slots found"]
-            ],
-            actions: [
-              { label: "Back", action: "close_panel" }
-            ]
+            rows: [["Save slots", "No save slots found"]],
+            actions: [{ label: "Back", action: "close_panel" }]
           };
         }
 
@@ -460,28 +446,22 @@
                 label: "Menu music volume",
                 value: `${menuVolume}%`,
                 controls: [
-                  { label: "-", action: "volume_down", className: "step-button", ariaLabel: "Lower menu music volume" },
-                  { label: "+", action: "volume_up", className: "step-button", ariaLabel: "Raise menu music volume" }
+                  { label: "-", action: "volume_down", className: "step-button" },
+                  { label: "+", action: "volume_up", className: "step-button" }
                 ]
               },
               {
                 label: "Mute menu music",
                 value: "",
-                controls: [
-                  { label: menuMuted ? "Unmute" : "Mute", action: "toggle_mute", className: "toggle-button", pressed: menuMuted }
-                ]
+                controls: [{ label: menuMuted ? "Unmute" : "Mute", action: "toggle_mute", className: "toggle-button", pressed: menuMuted }]
               },
               {
                 label: "Show FPS",
                 value: "",
-                controls: [
-                  { label: showFps ? "Hide" : "Show", action: "toggle_fps", className: "toggle-button", pressed: showFps }
-                ]
+                controls: [{ label: showFps ? "Hide" : "Show", action: "toggle_fps", className: "toggle-button", pressed: showFps }]
               }
             ],
-            actions: [
-              { label: "Back", action: "close_panel" }
-            ]
+            actions: [{ label: "Back", action: "close_panel" }]
           };
         }
 
@@ -494,9 +474,7 @@
               ["Fonts", "Orbitron and Titillium Web under OFL"],
               ["UI references", "X4: Foundations and Stellaris"]
             ],
-            actions: [
-              { label: "Back", action: "close_panel" }
-            ]
+            actions: [{ label: "Back", action: "close_panel" }]
           };
         }
 
@@ -520,26 +498,18 @@
         button.removeAttribute("data-action");
         button.removeAttribute("data-command");
         button.removeAttribute("data-view");
-        button.removeAttribute("aria-pressed");
-        if (action.action) {
-          button.dataset.action = action.action;
-        }
-        if (action.command) {
-          button.dataset.command = action.command;
-        }
-        if (action.view) {
-          button.dataset.view = action.view;
-        }
+        button.removeAttribute("data-pressed");
+        if (action.action) button.dataset.action = action.action;
+        if (action.command) button.dataset.command = action.command;
+        if (action.view) button.dataset.view = action.view;
         if (typeof action.pressed === "boolean") {
-          button.setAttribute("aria-pressed", action.pressed ? "true" : "false");
+          button.dataset.pressed = action.pressed ? "true" : "false";
         }
       }
 
       function renderRowValue(valueEl, detail) {
         valueEl.textContent = detail.value || "";
-        if (!detail.controls || detail.controls.length === 0) {
-          return;
-        }
+        if (!detail.controls || detail.controls.length === 0) return;
 
         const controlsEl = document.createElement("span");
         controlsEl.className = "setting-control";
@@ -547,16 +517,9 @@
           const button = document.createElement("button");
           button.type = "button";
           button.textContent = control.label;
-          if (control.className) {
-            button.className = control.className;
-          }
-          if (control.ariaLabel) {
-            button.setAttribute("aria-label", control.ariaLabel);
-          }
+          if (control.className) button.className = control.className;
           applyButtonAction(button, control);
-          button.addEventListener("click", () => {
-            activateButton(button);
-          });
+          button.addEventListener("click", () => activateButton(button));
           controlsEl.appendChild(button);
         });
         valueEl.appendChild(controlsEl);
@@ -576,9 +539,7 @@
         });
         detailRows.forEach((row, index) => {
           const source = content.rows[index];
-          const detail = Array.isArray(source)
-            ? { label: source[0], value: source[1] }
-            : source;
+          const detail = Array.isArray(source) ? { label: source[0], value: source[1] } : source;
           row[0].textContent = detail ? detail.label : "";
           renderRowValue(row[1], detail || { value: "" });
           row[0].parentElement.classList.toggle("is-empty", !detail);
@@ -590,13 +551,13 @@
           if (!action) {
             button.textContent = "";
             button.disabled = true;
-            button.setAttribute("aria-hidden", "true");
+            button.hidden = true;
             return;
           }
 
           button.textContent = action.label;
           button.disabled = false;
-          button.removeAttribute("aria-hidden");
+          button.hidden = false;
         });
         viewEyebrowEl.textContent = content.meta[0];
         viewTitleEl.textContent = content.meta[1];
@@ -616,7 +577,7 @@
           button.classList.remove("primary-action");
           button.textContent = "";
           button.disabled = true;
-          button.setAttribute("aria-hidden", "true");
+          button.hidden = true;
         });
         setStatus("ready", "Ready");
       }
@@ -638,110 +599,55 @@
       function updateMenuVolume(value) {
         menuVolume = Math.max(0, Math.min(100, value));
         sendNative("set_music_volume", String(menuVolume / 100));
-        if (activePanel === "settings") {
-          showPanel("settings");
-        }
+        if (activePanel === "settings") showPanel("settings");
       }
 
       function updateMenuMuted(value) {
         menuMuted = value;
         sendNative("set_music_muted", menuMuted ? "true" : "false");
-        if (activePanel === "settings") {
-          showPanel("settings");
-        }
+        if (activePanel === "settings") showPanel("settings");
       }
 
       function updateShowFps(value) {
         showFps = value;
         sendNative("set_show_fps", showFps ? "true" : "false");
-        if (activePanel === "settings") {
-          showPanel("settings");
-        }
+        if (activePanel === "settings") showPanel("settings");
       }
 
       function runAction(action) {
-        if (action === "close_panel") {
-          closePanel();
-        } else if (action === "volume_down") {
-          updateMenuVolume(menuVolume - 5);
-        } else if (action === "volume_up") {
-          updateMenuVolume(menuVolume + 5);
-        } else if (action === "toggle_mute") {
-          updateMenuMuted(!menuMuted);
-        } else if (action === "toggle_fps") {
-          updateShowFps(!showFps);
-        }
+        if (action === "close_panel") closePanel();
+        else if (action === "volume_down") updateMenuVolume(menuVolume - 5);
+        else if (action === "volume_up") updateMenuVolume(menuVolume + 5);
+        else if (action === "toggle_mute") updateMenuMuted(!menuMuted);
+        else if (action === "toggle_fps") updateShowFps(!showFps);
       }
 
       function activateButton(button) {
-        if (!button || button.disabled) {
-          return;
-        }
-
-        if (button.dataset.action) {
-          runAction(button.dataset.action);
-        }
-        if (button.dataset.view) {
-          showPanel(button.dataset.view);
-        }
-        if (button.dataset.command) {
-          runCommand(button.dataset.command);
-        }
-      }
-
-      function shortcutKey(event) {
-        const key = (event.key || "").toLowerCase();
-        if (key) {
-          if (key === " " || key === "spacebar") {
-            return "space";
-          }
-          if (key.length === 1 || key === "enter" || key === "escape" || key === "esc") {
-            return key;
-          }
-        }
-
-        const code = event.keyCode || event.which || event.charCode || 0;
-        const keyCodes = {
-          13: "enter",
-          27: "escape",
-          32: "space",
-          67: "c",
-          76: "l",
-          78: "n",
-          82: "r",
-          83: "s"
-        };
-        return keyCodes[code] || "";
+        if (!button || button.disabled) return;
+        if (button.dataset.action) runAction(button.dataset.action);
+        if (button.dataset.view) showPanel(button.dataset.view);
+        if (button.dataset.command) runCommand(button.dataset.command);
       }
 
       document.querySelectorAll("button").forEach((button) => {
-        button.addEventListener("click", () => {
-          activateButton(button);
-        });
+        button.addEventListener("click", () => activateButton(button));
       });
 
       document.addEventListener("keydown", (event) => {
-        if (quitConfirm.handleKeyDown(event)) {
-          return;
-        }
+        if (quitConfirm.handleKeyDown(event)) return;
 
-        const key = shortcutKey(event);
-
-        if (window.solarisUi.moveDirectionalFocus(event, navButtons, {
-          nextKey: "arrowdown",
-          previousKey: "arrowup"
-        })) {
+        if (moveDirectionalFocus(event, navButtons, { nextKey: "arrowdown", previousKey: "arrowup" })) {
           return;
         }
 
         const continueButton = document.querySelector('[data-command="continue_game"]');
+        const key = event.key.toLowerCase();
         const shortcuts = {
-          c: () => { if (continueButton && !continueButton.disabled) runCommand("continue_game"); },
+          c: () => { if (!continueButton.disabled) runCommand("continue_game"); },
           l: () => showPanel("load"),
           n: () => runCommand("new_game"),
           s: () => showPanel("settings"),
           r: () => showPanel("credits"),
-          esc: () => activePanel ? closePanel() : runCommand("quit"),
           escape: () => activePanel ? closePanel() : runCommand("quit")
         };
         if (shortcuts[key]) {
@@ -750,9 +656,7 @@
         }
       });
 
-      window.solarisUi.installButtonConfirmKeys({
-        activate: activateButton
-      });
+      installButtonConfirmKeys({ activate: activateButton });
 
       closePanel();
     </script>

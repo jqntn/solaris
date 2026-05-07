@@ -1,8 +1,9 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Solaris — Game HUD</title>
     <link rel="stylesheet" href="ui.css">
     <style>
       body {
@@ -52,25 +53,22 @@
         align-items: center;
         gap: var(--space-2);
         pointer-events: auto;
-      }
 
-      .hud-actions button {
-        min-width: 116px;
-        padding: 0 var(--space-4);
-        border-color: rgba(163, 197, 214, 0.16);
-        background: rgba(255, 255, 255, 0.035);
-        color: var(--ink-high);
-        font-weight: 600;
-      }
+        & button {
+          min-width: 116px;
+          padding: 0 var(--space-4);
+          border-color: rgba(163, 197, 214, 0.16);
+          background: rgba(255, 255, 255, 0.035);
+          color: var(--ink-high);
+          font-weight: 600;
 
-      .hud-actions button:hover,
-      .hud-actions button:focus {
-        border-color: var(--line-strong);
-        color: var(--ink-high);
-      }
-
-      .hud-actions button:active {
-        color: var(--ink-high);
+          &:hover,
+          &:focus,
+          &:active {
+            border-color: var(--line-strong);
+            color: var(--ink-high);
+          }
+        }
       }
 
       .hud-footer {
@@ -105,33 +103,13 @@
         <footer class="hud-footer">Dashboard UI placeholder: current build renders the prototype 3D scene.</footer>
       </main>
     </div>
-    <script src="ui.js"></script>
-    <script>
-      function sendNative(command, payload = "") {
-        if (typeof window.solarisNativeCommand === "function") {
-          window.solarisNativeCommand(command, String(payload));
-        }
-      }
+    <script type="module">
+      import { sendNative, installButtonConfirmKeys } from './ui.js';
 
-      document.getElementById("mainMenuButton").addEventListener("click", () => {
-        sendNative("main_menu");
-      });
+      document.getElementById("mainMenuButton").addEventListener("click", () => sendNative("main_menu"));
+      document.getElementById("quitButton").addEventListener("click", () => sendNative("quit"));
 
-      document.getElementById("quitButton").addEventListener("click", () => {
-        sendNative("quit");
-      });
-
-      function activateButton(button) {
-        if (button.id === "mainMenuButton") {
-          sendNative("main_menu");
-        } else if (button.id === "quitButton") {
-          sendNative("quit");
-        }
-      }
-
-      window.solarisUi.installButtonConfirmKeys({
-        activate: activateButton
-      });
+      installButtonConfirmKeys();
     </script>
   </body>
 </html>
