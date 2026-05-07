@@ -109,7 +109,7 @@ find_program(CLANG_TIDY_EXE
 set(CMAKE_CXX_CLANG_TIDY
     "${CLANG_TIDY_EXE}"
     "--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy"
-    "--header-filter=^.*machina[\\\\/](include|src|tests)[\\\\/]"
+    "--header-filter=^.*solaris[\\\\/](include|src|tests)[\\\\/]"
     "--extra-arg=--target=x86_64-pc-windows-msvc"
     "--extra-arg=/EHsc")
 
