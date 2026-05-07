@@ -215,8 +215,8 @@ function(solaris_test target test_name)
              WORKING_DIRECTORY "$<TARGET_FILE_DIR:${target}>")
 endfunction()
 
-solaris_test(machina_level_smoke level_smoke tests/level_smoke.cpp)
-solaris_test(machina_strategic_camera strategic_camera_controller tests/strategic_camera_controller_test.cpp)
+solaris_test(machina_usd_level_loader usd_level_loader tests/usd_level_loader.cpp)
+solaris_test(machina_strategic_camera_controller strategic_camera_controller tests/strategic_camera_controller.cpp)
 solaris_test(machina_scene_stack scene_stack tests/scene_stack.cpp)
 solaris_test(solaris_menu_commands menu_commands tests/menu_commands.cpp src/menu_commands.cpp)
 
