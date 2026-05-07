@@ -371,13 +371,9 @@
     </div>
 
     <script src="build-info.js"></script>
-    <script type="module">
-      import {
-        sendNative,
-        createConfirmDialog,
-        installButtonConfirmKeys,
-        moveDirectionalFocus
-      } from './ui.js';
+    <script src="ui.js"></script>
+    <script>
+      const { sendNative, createConfirmDialog, installButtonConfirmKeys, moveDirectionalFocus } = window.solarisUi;
 
       const buildRevisionEl = document.getElementById("buildRevision");
       buildRevisionEl.textContent = window.solarisBuild.revision;

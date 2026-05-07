@@ -103,8 +103,9 @@
         <footer class="hud-footer">Dashboard UI placeholder: current build renders the prototype 3D scene.</footer>
       </main>
     </div>
-    <script type="module">
-      import { sendNative, installButtonConfirmKeys } from './ui.js';
+    <script src="ui.js"></script>
+    <script>
+      const { sendNative, installButtonConfirmKeys } = window.solarisUi;
 
       document.getElementById("mainMenuButton").addEventListener("click", () => sendNative("main_menu"));
       document.getElementById("quitButton").addEventListener("click", () => sendNative("quit"));
