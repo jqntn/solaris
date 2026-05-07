@@ -18,7 +18,7 @@
 #include <cmath>
 #include <cstdint>
 #include <filesystem>
-#include <machina/runtime_paths.hpp>
+#include <machina/path_helpers.hpp>
 #include <machina/web_overlay.hpp>
 #include <memory>
 #include <raylib.h>

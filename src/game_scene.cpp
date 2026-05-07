@@ -3,8 +3,9 @@
 #include <filesystem>
 #include <machina/level_instantiator.hpp>
 #include <machina/materialx_shader_generator.hpp>
+#include <machina/path_helpers.hpp>
 #include <machina/renderer.hpp>
-#include <machina/runtime_paths.hpp>
+#include <machina/screen_helpers.hpp>
 #include <machina/usd_level_loader.hpp>
 #include <raylib.h>
 #include <solaris/main_menu_scene.hpp>
@@ -31,8 +32,8 @@ GameScene::GameScene(ConstructorTag,
   , webOverlay(std::make_unique<machina::WebOverlay>(
       0,
       0,
-      GetScreenWidth(),
-      GetScreenHeight(),
+      machina::GetVisibleScreenWidth(),
+      machina::GetVisibleScreenHeight(),
       "file:///" MACHINA_ASSETS_ROOT "/web/game-hud.html",
       [this](std::string command, std::string payload) {
         HandleWebCommand(std::move(command), std::move(payload));

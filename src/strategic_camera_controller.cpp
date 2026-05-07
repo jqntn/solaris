@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <machina/screen_helpers.hpp>
 #include <machina/strategic_camera_controller.hpp>
 #include <raymath.h>
 
@@ -165,8 +166,8 @@ StrategicCameraControls::Read(StrategicCameraControlCapture capture)
 {
   return StrategicCameraInput{
     .frameTime = GetFrameTime(),
-    .screenWidth = GetScreenWidth(),
-    .screenHeight = GetScreenHeight(),
+    .screenWidth = GetVisibleScreenWidth(),
+    .screenHeight = GetVisibleScreenHeight(),
     .mousePosition = GetMousePosition(),
     .mouseDelta = GetMouseDelta(),
     .mouseWheel = GetMouseWheelMove(),

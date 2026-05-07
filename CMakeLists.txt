@@ -117,9 +117,10 @@ set(CMAKE_CXX_CLANG_TIDY
 add_library(machina_engine STATIC
     src/level_instantiator.cpp
     src/materialx_shader_generator.cpp
+    src/path_helpers.cpp
     src/renderer.cpp
-    src/runtime_paths.cpp
     src/scene.cpp
+    src/screen_helpers.cpp
     src/strategic_camera_controller.cpp
     src/usd_level_loader.cpp
     src/web_overlay.cpp)

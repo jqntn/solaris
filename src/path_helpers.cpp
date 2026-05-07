@@ -1,4 +1,4 @@
-#include <machina/runtime_paths.hpp>
+#include <machina/path_helpers.hpp>
 
 #include <raylib.h>
 
