@@ -6,19 +6,21 @@
     <title>Solaris — Main Menu</title>
     <link rel="stylesheet" href="ui.css">
     <style>
-      body {
-        background:
-          linear-gradient(90deg, rgba(2, 6, 10, 0.78) 0%, rgba(2, 6, 10, 0.52) 42%, rgba(2, 6, 10, 0.08) 100%),
-          linear-gradient(0deg, rgba(2, 6, 10, 0.72) 0%, rgba(2, 6, 10, 0.06) 46%, rgba(2, 6, 10, 0.58) 100%);
-      }
-
-      body::before {
-        content: "";
+      .bg-image {
         position: fixed;
         inset: 0;
-        z-index: -1;
         background: url("../graphics/mainmenu.jpg") center / cover no-repeat;
-        filter: brightness(1.1);
+        filter: brightness(1.0);
+        pointer-events: none;
+      }
+
+      .bg-overlay {
+        position: fixed;
+        inset: 0;
+        background:
+          linear-gradient(90deg, rgba(2, 6, 10, 0.39) 0%, rgba(2, 6, 10, 0.26) 42%, rgba(2, 6, 10, 0.04) 100%),
+          linear-gradient(0deg, rgba(2, 6, 10, 0.36) 0%, rgba(2, 6, 10, 0.03) 46%, rgba(2, 6, 10, 0.29) 100%);
+        pointer-events: none;
       }
 
       .menu-root {
@@ -289,6 +291,8 @@
     </style>
   </head>
   <body class="ui-scale-page">
+    <div class="bg-image"></div>
+    <div class="bg-overlay"></div>
     <div class="ui-scale-stage">
       <main class="menu-root">
         <section class="brand-column">
