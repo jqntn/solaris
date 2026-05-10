@@ -1,5 +1,6 @@
 {
   "dependencies": [
-    "entt"
+    "entt",
+    "nlohmann-json"
   ]
 }
