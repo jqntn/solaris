@@ -9,7 +9,6 @@
 #include <solaris/menu_commands.hpp>
 #include <solaris/settings.hpp>
 #include <string>
-#include <string_view>
 #include <utility>
 
 namespace {
@@ -18,47 +17,6 @@ namespace {
 MainMenuMusicPath()
 {
   return machina::RuntimeAssetPath() / "sounds" / "mainmenu.ogg";
-}
-
-[[nodiscard]] std::string
-JavaScriptString(std::string_view value)
-{
-  std::string escaped = "'";
-  for (const char character : value) {
-    switch (character) {
-      case '\\':
-        escaped += "\\\\";
-        break;
-      case '\'':
-        escaped += "\\'";
-        break;
-      case '\n':
-        escaped += "\\n";
-        break;
-      case '\r':
-        escaped += "\\r";
-        break;
-      case '\t':
-        escaped += "\\t";
-        break;
-      default:
-        escaped.push_back(character);
-        break;
-    }
-  }
-  escaped += "'";
-  return escaped;
-}
-
-[[nodiscard]] std::string
-DiagnosticMessage(const GameScene::CreateResult& result)
-{
-  if (result.diagnostics.empty()) {
-    return "Unable to start the prototype scene.";
-  }
-
-  return std::string(result.diagnosticLabel) + ": " +
-         result.diagnostics.front().message;
 }
 
 [[nodiscard]] std::string
@@ -208,12 +166,10 @@ void
 MainMenuScene::StartNewGame(machina::SceneStack& scenes)
 {
   newGameRequested = false;
-  SetMenuStatus("loading", "Loading prototype scene");
 
   GameScene::CreateResult gameScene =
     GameScene::Create(renderer, showFps, settings);
   if (gameScene.scene == nullptr || !gameScene.diagnostics.empty()) {
-    SetMenuStatus("error", DiagnosticMessage(gameScene));
     return;
   }
 
@@ -221,16 +177,6 @@ MainMenuScene::StartNewGame(machina::SceneStack& scenes)
     StopMusicStream(music);
   }
   scenes.Replace(std::move(gameScene.scene));
-}
-
-void
-MainMenuScene::SetMenuStatus(std::string_view tone,
-                             std::string_view message) const
-{
-  const std::string script =
-    "window.solarisMenuSetStatus && window.solarisMenuSetStatus(" +
-    JavaScriptString(tone) + ", " + JavaScriptString(message) + ");";
-  (void)webOverlay->EvaluateScript(script);
 }
 
 void

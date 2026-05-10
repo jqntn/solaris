@@ -323,7 +323,6 @@
                 <p class="eyebrow" id="viewEyebrow">Command interface</p>
                 <h2 class="panel-title" id="viewTitle">Campaign Entry</h2>
               </div>
-              <span class="status-pill" id="viewStatus" data-tone="ready">Standing by</span>
             </header>
 
             <section class="view" id="detailView">
@@ -388,7 +387,6 @@
       const buildRevisionEl = document.getElementById("buildRevision");
       buildRevisionEl.textContent = window.solarisBuild.revision;
 
-      const statusEl = document.getElementById("viewStatus");
       const viewTitleEl = document.getElementById("viewTitle");
       const viewEyebrowEl = document.getElementById("viewEyebrow");
       const viewColumnEl = document.getElementById("viewColumn");
@@ -418,18 +416,6 @@
         onConfirm: () => sendNative("quit")
       });
 
-      function setStatus(tone, message) {
-        statusEl.dataset.tone = tone;
-        statusEl.textContent = message;
-        if (tone === "error") {
-          document.querySelectorAll('[data-command="new_game"]').forEach((button) => {
-            button.disabled = false;
-          });
-        }
-      }
-
-      window.solarisMenuSetStatus = setStatus;
-
       window.solarisMenuApplySettings = (volume, muted, fps) => {
         menuVolume = Math.max(0, Math.min(100, Math.round(volume * 100)));
         menuMuted = !!muted;
@@ -441,7 +427,7 @@
         if (panelName === "load") {
           return {
             name: "load",
-            meta: ["Campaign archive", "Load", "No save slots"],
+            meta: ["Campaign archive", "Load"],
             rows: [["Save slots", "No save slots found"]],
             actions: [{ label: "Back", action: "close_panel" }]
           };
@@ -450,7 +436,7 @@
         if (panelName === "settings") {
           return {
             name: "settings",
-            meta: ["Session controls", "Settings", "Session only"],
+            meta: ["Session controls", "Settings"],
             rows: [
               {
                 label: "Menu music volume",
@@ -478,7 +464,7 @@
         if (panelName === "credits") {
           return {
             name: "credits",
-            meta: ["Build record", "Credits", "Local assets"],
+            meta: ["Build record", "Credits"],
             rows: [
               ["Engine layer", "raylib, Ultralight, EnTT, USD, MaterialX"],
               ["Fonts", "Orbitron and Titillium Web under OFL"],
@@ -490,7 +476,7 @@
 
         return {
           name: "home",
-          meta: ["Command interface", "Campaign Entry", "Standing by"],
+          meta: ["Command interface", "Campaign Entry"],
           rows: [
             ["Mode", "Single-player real time with pause"],
             ["Primary pressure", "Internal politics"],
@@ -571,7 +557,6 @@
         });
         viewEyebrowEl.textContent = content.meta[0];
         viewTitleEl.textContent = content.meta[1];
-        setStatus("ready", content.meta[2]);
       }
 
       function closePanel() {
@@ -589,19 +574,12 @@
           button.disabled = true;
           button.hidden = true;
         });
-        setStatus("ready", "Ready");
       }
 
       function runCommand(command) {
         if (command === "quit") {
           quitConfirm.open();
           return;
-        }
-        if (command === "new_game") {
-          document.querySelectorAll('[data-command="new_game"]').forEach((button) => {
-            button.disabled = true;
-          });
-          setStatus("loading", "Loading prototype scene");
         }
         sendNative(command);
       }

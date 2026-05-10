@@ -6,7 +6,6 @@
 #include <raylib.h>
 #include <solaris/settings.hpp>
 #include <string>
-#include <string_view>
 
 namespace machina {
 class Renderer;
@@ -28,7 +27,6 @@ private:
   void HandleWebCommand(std::string command, std::string payload);
   void ApplyMusicVolume();
   void StartNewGame(machina::SceneStack& scenes);
-  void SetMenuStatus(std::string_view tone, std::string_view message) const;
   void PushSettingsToWeb();
   void PersistSettings() const;
 
