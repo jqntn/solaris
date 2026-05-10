@@ -433,6 +433,13 @@
 
       window.solarisMenuSetStatus = setStatus;
 
+      window.solarisMenuApplySettings = (volume, muted, fps) => {
+        menuVolume = Math.max(0, Math.min(100, Math.round(volume * 100)));
+        menuMuted = !!muted;
+        showFps = !!fps;
+        if (activePanel === "settings") showPanel("settings");
+      };
+
       function panelContent(panelName) {
         if (panelName === "load") {
           return {

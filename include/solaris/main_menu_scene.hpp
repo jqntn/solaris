@@ -4,6 +4,7 @@
 #include <machina/web_overlay.hpp>
 #include <memory>
 #include <raylib.h>
+#include <solaris/settings.hpp>
 #include <string>
 #include <string_view>
 
@@ -14,7 +15,9 @@ class Renderer;
 class MainMenuScene final : public machina::Scene
 {
 public:
-  explicit MainMenuScene(machina::Renderer& renderer, bool& showFps);
+  explicit MainMenuScene(machina::Renderer& renderer,
+                         bool& showFps,
+                         solaris::Settings& settings);
   ~MainMenuScene() override;
 
   void Update(machina::SceneStack& scenes) override;
@@ -26,14 +29,19 @@ private:
   void ApplyMusicVolume();
   void StartNewGame(machina::SceneStack& scenes);
   void SetMenuStatus(std::string_view tone, std::string_view message) const;
+  void PushSettingsToWeb();
+  void PersistSettings() const;
 
   machina::Renderer& renderer;
   bool& showFps;
+  solaris::Settings& settings;
   std::unique_ptr<machina::WebOverlay> webOverlay;
   Music music = Music{};
-  float musicVolume = 0.25f;
-  bool musicMuted = false;
+  float musicVolume;
+  bool musicMuted;
   bool musicValid = false;
   bool newGameRequested = false;
   bool quitRequested = false;
+  bool webReady = false;
+  bool lastSyncedShowFps = false;
 };

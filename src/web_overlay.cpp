@@ -349,13 +349,15 @@ public:
        int overlayWidth,
        int overlayHeight,
        std::string overlayPageUrl,
-       WebOverlayCommandHandler overlayCommandHandler)
+       WebOverlayCommandHandler overlayCommandHandler,
+       WebOverlayReadyHandler overlayReadyHandler)
     : x(overlayX)
     , y(overlayY)
     , width(overlayWidth)
     , height(overlayHeight)
     , pageUrl(std::move(overlayPageUrl))
     , commandHandler(std::move(overlayCommandHandler))
+    , readyHandler(std::move(overlayReadyHandler))
     , texture(LoadBlankTexture(overlayWidth, overlayHeight))
     , uploadPixels(static_cast<std::size_t>(overlayWidth * overlayHeight * 4))
   {
@@ -423,6 +425,15 @@ public:
     renderer->RefreshDisplay(0);
     renderer->Render();
     UploadIfDirty();
+
+    if (readyPending && !readyDelivered) {
+      readyPending = false;
+      readyDelivered = true;
+      if (readyHandler) {
+        readyHandler();
+      }
+    }
+
     return inputCapture;
   }
 
@@ -463,18 +474,22 @@ public:
     }
 
     view->Focus();
-    if (!commandHandler) {
-      return;
+
+    if (commandHandler) {
+      ultralight::RefPtr<ultralight::JSContext> context =
+        caller->LockJSContext();
+      ultralight::SetJSContext(context->ctx());
+      ultralight::JSObject global = ultralight::JSGlobalObject();
+      global["solarisNativeCommand"] =
+        ultralight::JSCallback(std::bind(&WebOverlay::Impl::OnNativeCommand,
+                                         this,
+                                         std::placeholders::_1,
+                                         std::placeholders::_2));
     }
 
-    ultralight::RefPtr<ultralight::JSContext> context = caller->LockJSContext();
-    ultralight::SetJSContext(context->ctx());
-    ultralight::JSObject global = ultralight::JSGlobalObject();
-    global["solarisNativeCommand"] =
-      ultralight::JSCallback(std::bind(&WebOverlay::Impl::OnNativeCommand,
-                                       this,
-                                       std::placeholders::_1,
-                                       std::placeholders::_2));
+    if (!readyDelivered) {
+      readyPending = true;
+    }
   }
 
 private:
@@ -704,6 +719,7 @@ private:
   int height = 0;
   std::string pageUrl;
   WebOverlayCommandHandler commandHandler;
+  WebOverlayReadyHandler readyHandler;
   TextureHandle texture;
   std::vector<std::uint8_t> uploadPixels;
   ultralight::RefPtr<ultralight::Renderer> renderer;
@@ -711,6 +727,8 @@ private:
   std::array<bool, 3> capturedMouseButtons = std::array<bool, 3>{};
   bool mouseInside = false;
   bool wasMouseInside = false;
+  bool readyPending = false;
+  bool readyDelivered = false;
 };
 
 WebOverlay::WebOverlay(int x,
@@ -718,13 +736,15 @@ WebOverlay::WebOverlay(int x,
                        int width,
                        int height,
                        std::string pageUrl,
-                       WebOverlayCommandHandler commandHandler)
+                       WebOverlayCommandHandler commandHandler,
+                       WebOverlayReadyHandler readyHandler)
   : impl(std::make_unique<Impl>(x,
                                 y,
                                 width,
                                 height,
                                 std::move(pageUrl),
-                                std::move(commandHandler)))
+                                std::move(commandHandler),
+                                std::move(readyHandler)))
 {
 }
 

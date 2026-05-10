@@ -15,6 +15,7 @@ struct WebOverlayInputCapture
 
 using WebOverlayCommandHandler =
   std::function<void(std::string command, std::string payload)>;
+using WebOverlayReadyHandler = std::function<void()>;
 
 class WebOverlay
 {
@@ -24,7 +25,8 @@ public:
              int width,
              int height,
              std::string pageUrl,
-             WebOverlayCommandHandler commandHandler = {});
+             WebOverlayCommandHandler commandHandler = {},
+             WebOverlayReadyHandler readyHandler = {});
   ~WebOverlay();
 
   [[nodiscard]] WebOverlayInputCapture Update(bool acceptsInput);

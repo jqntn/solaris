@@ -31,6 +31,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(nvidia_usd)
 
 find_package(EnTT CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 
 # SDK layout
 set(USD_ROOT "${nvidia_usd_SOURCE_DIR}")
@@ -136,8 +137,9 @@ add_executable(solaris
     src/game_scene.cpp
     src/main.cpp
     src/main_menu_scene.cpp
-    src/menu_commands.cpp)
-target_link_libraries(solaris PRIVATE machina_engine)
+    src/menu_commands.cpp
+    src/settings.cpp)
+target_link_libraries(solaris PRIVATE machina_engine nlohmann_json::nlohmann_json)
 
 # clang-format
 find_program(CLANG_FORMAT_EXE
@@ -220,6 +222,8 @@ solaris_test(machina_usd_level_loader usd_level_loader tests/usd_level_loader.cp
 solaris_test(machina_strategic_camera_controller strategic_camera_controller tests/strategic_camera_controller.cpp)
 solaris_test(machina_scene_stack scene_stack tests/scene_stack.cpp)
 solaris_test(solaris_menu_commands menu_commands tests/menu_commands.cpp src/menu_commands.cpp)
+solaris_test(solaris_settings settings tests/settings.cpp src/settings.cpp)
+target_link_libraries(solaris_settings PRIVATE nlohmann_json::nlohmann_json)
 
 # Distribution
 set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ".")

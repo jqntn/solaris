@@ -7,6 +7,7 @@
 #include <machina/screen_helpers.hpp>
 #include <solaris/game_scene.hpp>
 #include <solaris/menu_commands.hpp>
+#include <solaris/settings.hpp>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -60,11 +61,20 @@ DiagnosticMessage(const GameScene::CreateResult& result)
          result.diagnostics.front().message;
 }
 
+[[nodiscard]] std::string
+BoolLiteral(bool value)
+{
+  return value ? "true" : "false";
 }
 
-MainMenuScene::MainMenuScene(machina::Renderer& renderer, bool& showFps)
+}
+
+MainMenuScene::MainMenuScene(machina::Renderer& renderer,
+                             bool& showFps,
+                             solaris::Settings& settings)
   : renderer(renderer)
   , showFps(showFps)
+  , settings(settings)
   , webOverlay(std::make_unique<machina::WebOverlay>(
       0,
       0,
@@ -73,7 +83,15 @@ MainMenuScene::MainMenuScene(machina::Renderer& renderer, bool& showFps)
       "file:///" MACHINA_ASSETS_ROOT "/web/main-menu.html",
       [this](std::string command, std::string payload) {
         HandleWebCommand(std::move(command), std::move(payload));
+      },
+      [this] {
+        webReady = true;
+        lastSyncedShowFps = this->showFps;
+        PushSettingsToWeb();
       }))
+  , musicVolume(settings.musicVolume)
+  , musicMuted(settings.musicMuted)
+  , lastSyncedShowFps(showFps)
 {
   if (!IsAudioDeviceReady()) {
     return;
@@ -109,6 +127,11 @@ MainMenuScene::Update(machina::SceneStack& scenes)
   }
 
   (void)webOverlay->Update(true);
+
+  if (webReady && lastSyncedShowFps != showFps) {
+    PushSettingsToWeb();
+    lastSyncedShowFps = showFps;
+  }
 
   if (quitRequested) {
     scenes.RequestQuit();
@@ -148,14 +171,21 @@ MainMenuScene::HandleWebCommand(std::string command, std::string payload)
       break;
     case solaris::MainMenuCommandKind::SetMusicVolume:
       musicVolume = parsed.musicVolume;
+      settings.musicVolume = musicVolume;
       ApplyMusicVolume();
+      PersistSettings();
       break;
     case solaris::MainMenuCommandKind::SetMusicMuted:
       musicMuted = parsed.musicMuted;
+      settings.musicMuted = musicMuted;
       ApplyMusicVolume();
+      PersistSettings();
       break;
     case solaris::MainMenuCommandKind::SetShowFps:
       showFps = parsed.showFps;
+      settings.showFps = showFps;
+      lastSyncedShowFps = showFps;
+      PersistSettings();
       break;
     case solaris::MainMenuCommandKind::Unknown:
       break;
@@ -180,7 +210,8 @@ MainMenuScene::StartNewGame(machina::SceneStack& scenes)
   newGameRequested = false;
   SetMenuStatus("loading", "Loading prototype scene");
 
-  GameScene::CreateResult gameScene = GameScene::Create(renderer, showFps);
+  GameScene::CreateResult gameScene =
+    GameScene::Create(renderer, showFps, settings);
   if (gameScene.scene == nullptr || !gameScene.diagnostics.empty()) {
     SetMenuStatus("error", DiagnosticMessage(gameScene));
     return;
@@ -200,4 +231,20 @@ MainMenuScene::SetMenuStatus(std::string_view tone,
     "window.solarisMenuSetStatus && window.solarisMenuSetStatus(" +
     JavaScriptString(tone) + ", " + JavaScriptString(message) + ");";
   (void)webOverlay->EvaluateScript(script);
+}
+
+void
+MainMenuScene::PushSettingsToWeb()
+{
+  const std::string script =
+    "window.solarisMenuApplySettings && window.solarisMenuApplySettings(" +
+    std::to_string(musicVolume) + ", " + BoolLiteral(musicMuted) + ", " +
+    BoolLiteral(showFps) + ");";
+  (void)webOverlay->EvaluateScript(script);
+}
+
+void
+MainMenuScene::PersistSettings() const
+{
+  solaris::SaveSettings(solaris::DefaultSettingsPath(), settings);
 }

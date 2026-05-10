@@ -6,6 +6,7 @@
 #include <machina/strategic_camera_controller.hpp>
 #include <machina/web_overlay.hpp>
 #include <memory>
+#include <solaris/settings.hpp>
 #include <string_view>
 #include <vector>
 
@@ -20,7 +21,8 @@ public:
   };
 
   [[nodiscard]] static CreateResult Create(machina::Renderer& renderer,
-                                           bool& showFps);
+                                           bool& showFps,
+                                           solaris::Settings& settings);
 
 private:
   struct ConstructorTag
@@ -30,6 +32,7 @@ public:
   GameScene(ConstructorTag,
             machina::Renderer& renderer,
             bool& showFps,
+            solaris::Settings& settings,
             entt::registry registry);
 
   void Update(machina::SceneStack& scenes) override;
@@ -41,6 +44,7 @@ private:
 
   machina::Renderer& renderer;
   bool& showFps;
+  solaris::Settings& settings;
   entt::registry registry;
   std::unique_ptr<machina::WebOverlay> webOverlay;
   machina::StrategicCameraController cameraController;

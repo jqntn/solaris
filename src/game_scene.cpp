@@ -25,9 +25,11 @@ SampleScenePath()
 GameScene::GameScene(ConstructorTag,
                      machina::Renderer& renderer,
                      bool& showFps,
+                     solaris::Settings& settings,
                      entt::registry registry)
   : renderer(renderer)
   , showFps(showFps)
+  , settings(settings)
   , registry(std::move(registry))
   , webOverlay(std::make_unique<machina::WebOverlay>(
       0,
@@ -42,7 +44,9 @@ GameScene::GameScene(ConstructorTag,
 }
 
 GameScene::CreateResult
-GameScene::Create(machina::Renderer& renderer, bool& showFps)
+GameScene::Create(machina::Renderer& renderer,
+                  bool& showFps,
+                  solaris::Settings& settings)
 {
   machina::LevelDescription level =
     machina::UsdLevelLoader().Load(SampleScenePath());
@@ -65,7 +69,7 @@ GameScene::Create(machina::Renderer& renderer, bool& showFps)
 
   return CreateResult{
     .scene = std::make_unique<GameScene>(
-      ConstructorTag{}, renderer, showFps, std::move(registry)),
+      ConstructorTag{}, renderer, showFps, settings, std::move(registry)),
   };
 }
 
@@ -89,7 +93,8 @@ GameScene::Update(machina::SceneStack& scenes)
 
   if (mainMenuRequested) {
     mainMenuRequested = false;
-    scenes.Replace(std::make_unique<MainMenuScene>(renderer, showFps));
+    scenes.Replace(
+      std::make_unique<MainMenuScene>(renderer, showFps, settings));
   }
 }
 

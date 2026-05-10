@@ -4,6 +4,7 @@
 #include <machina/scene.hpp>
 #include <memory>
 #include <raylib.h>
+#include <solaris/settings.hpp>
 
 extern "C"
 {
@@ -38,13 +39,19 @@ main()
 
   machina::Renderer renderer;
   machina::SceneStack scenes;
-  bool showFps = false;
-  scenes.Push(std::make_unique<MainMenuScene>(renderer, showFps));
+  solaris::Settings settings =
+    solaris::LoadSettings(solaris::DefaultSettingsPath());
+  bool showFps = settings.showFps;
+  scenes.Push(std::make_unique<MainMenuScene>(renderer, showFps, settings));
   machina::SceneDrawContext drawContext =
     machina::SceneDrawContext{ .renderer = renderer };
 
   while (!WindowShouldClose() && !scenes.ShouldQuit()) {
-    showFps = showFps != IsKeyPressed(KEY_F1);
+    if (IsKeyPressed(KEY_F1)) {
+      showFps = !showFps;
+      settings.showFps = showFps;
+      solaris::SaveSettings(solaris::DefaultSettingsPath(), settings);
+    }
     scenes.Update();
     renderer.BeginFrame();
 
