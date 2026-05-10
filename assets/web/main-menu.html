@@ -312,7 +312,7 @@
 
           <div class="footer-line">
             <span id="buildRevision">local build</span>
-            <span class="status-pill" id="nativeStatus" data-tone="ready">Ready</span>
+            <span class="status-pill" id="nativeStatus" data-tone="ready">Alpha</span>
           </div>
         </section>
 
@@ -389,7 +389,6 @@
       buildRevisionEl.textContent = window.solarisBuild.revision;
 
       const statusEl = document.getElementById("viewStatus");
-      const nativeStatusEl = document.getElementById("nativeStatus");
       const viewTitleEl = document.getElementById("viewTitle");
       const viewEyebrowEl = document.getElementById("viewEyebrow");
       const viewColumnEl = document.getElementById("viewColumn");
@@ -422,8 +421,6 @@
       function setStatus(tone, message) {
         statusEl.dataset.tone = tone;
         statusEl.textContent = message;
-        nativeStatusEl.dataset.tone = tone;
-        nativeStatusEl.textContent = message;
         if (tone === "error") {
           document.querySelectorAll('[data-command="new_game"]').forEach((button) => {
             button.disabled = false;
