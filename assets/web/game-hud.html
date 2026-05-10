@@ -105,10 +105,10 @@
     </div>
     <script src="ui.js"></script>
     <script>
-      const { sendNative, installButtonConfirmKeys } = window.solarisUi;
+      const { requestSceneChange, installButtonConfirmKeys } = window.solarisUi;
 
-      document.getElementById("mainMenuButton").addEventListener("click", () => sendNative("main_menu"));
-      document.getElementById("quitButton").addEventListener("click", () => sendNative("quit"));
+      document.getElementById("mainMenuButton").addEventListener("click", () => requestSceneChange("main_menu"));
+      document.getElementById("quitButton").addEventListener("click", () => requestSceneChange("quit"));
 
       installButtonConfirmKeys();
     </script>

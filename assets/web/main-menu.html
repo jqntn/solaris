@@ -382,7 +382,7 @@
     <script src="build-info.js"></script>
     <script src="ui.js"></script>
     <script>
-      const { sendNative, createConfirmDialog, installButtonConfirmKeys, isEscapeKey, moveDirectionalFocus } = window.solarisUi;
+      const { sendNative, requestSceneChange, createConfirmDialog, installButtonConfirmKeys, isEscapeKey, moveDirectionalFocus } = window.solarisUi;
 
       const buildRevisionEl = document.getElementById("buildRevision");
       buildRevisionEl.textContent = window.solarisBuild.revision;
@@ -413,7 +413,7 @@
         modal: document.getElementById("quitConfirm"),
         cancelButton: document.getElementById("cancelQuitButton"),
         confirmButton: document.getElementById("confirmQuitButton"),
-        onConfirm: () => sendNative("quit")
+        onConfirm: () => requestSceneChange("quit")
       });
 
       window.solarisMenuApplySettings = (volume, muted, fps) => {
@@ -581,7 +581,7 @@
           quitConfirm.open();
           return;
         }
-        sendNative(command);
+        requestSceneChange(command);
       }
 
       function updateMenuVolume(value) {

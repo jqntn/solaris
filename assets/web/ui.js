@@ -21,6 +21,17 @@
   const sendNative = (command, payload = "") =>
     window.solarisNativeCommand(command, payload);
 
+  let sceneChangeRequested = false;
+
+  const requestSceneChange = (command, payload = "") => {
+    if (sceneChangeRequested) return;
+    sceneChangeRequested = true;
+    document.querySelectorAll("button").forEach((button) => {
+      button.disabled = true;
+    });
+    sendNative(command, payload);
+  };
+
   const keyName = (event) => {
     const key = event.key.toLowerCase();
     if (key === " ") return "space";
@@ -143,6 +154,7 @@
     isEscapeKey,
     keyName,
     moveDirectionalFocus,
+    requestSceneChange,
     sendNative
   };
 })();
