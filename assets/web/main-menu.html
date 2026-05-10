@@ -9,10 +9,16 @@
       body {
         background:
           linear-gradient(90deg, rgba(2, 6, 10, 0.78) 0%, rgba(2, 6, 10, 0.52) 42%, rgba(2, 6, 10, 0.08) 100%),
-          linear-gradient(0deg, rgba(2, 6, 10, 0.72) 0%, rgba(2, 6, 10, 0.06) 46%, rgba(2, 6, 10, 0.58) 100%),
-          url("../graphics/mainmenu.jpg");
-        background-position: center;
-        background-size: cover;
+          linear-gradient(0deg, rgba(2, 6, 10, 0.72) 0%, rgba(2, 6, 10, 0.06) 46%, rgba(2, 6, 10, 0.58) 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background: url("../graphics/mainmenu.jpg") center / cover no-repeat;
+        filter: brightness(1.1);
       }
 
       .menu-root {
