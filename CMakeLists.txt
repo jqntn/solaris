@@ -9,6 +9,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreadedDLL)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIG>")
 
+file(GLOB VS_LLVM_DIR "C:/Program Files/Microsoft Visual Studio/*/*/VC/Tools/Llvm")
+
 # Dependencies
 set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/out/vendor")
 set(FETCHCONTENT_QUIET OFF)
@@ -87,7 +89,7 @@ set(ULTRALIGHT_DLLS bin/AppCore.dll bin/Ultralight.dll bin/UltralightCore.dll bi
 
 # SDK targets
 add_library(nvidia_usd INTERFACE)
-target_include_directories(nvidia_usd INTERFACE
+target_include_directories(nvidia_usd SYSTEM INTERFACE
     "${USD_ROOT}/include"
     "${USD_ROOT}/python/include")
 target_compile_definitions(nvidia_usd INTERFACE NOMINMAX)
@@ -97,7 +99,7 @@ endforeach()
 target_link_libraries(nvidia_usd INTERFACE "${USD_ROOT}/python/libs/python312.lib")
 
 add_library(ultralight INTERFACE)
-target_include_directories(ultralight INTERFACE "${ULTRALIGHT_ROOT}/include")
+target_include_directories(ultralight SYSTEM INTERFACE "${ULTRALIGHT_ROOT}/include")
 foreach(lib IN LISTS ULTRALIGHT_LIBS)
     target_link_libraries(ultralight INTERFACE "${ULTRALIGHT_ROOT}/lib/${lib}.lib")
 endforeach()
@@ -105,7 +107,8 @@ endforeach()
 # clang-tidy
 find_program(CLANG_TIDY_EXE
     NAMES clang-tidy clang-tidy.exe
-    HINTS "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/Llvm/bin")
+    HINTS ${VS_LLVM_DIR}
+    PATH_SUFFIXES bin x64/bin)
 
 set(CMAKE_CXX_CLANG_TIDY
     "${CLANG_TIDY_EXE}"
@@ -125,6 +128,7 @@ add_library(machina_engine STATIC
     src/strategic_camera_controller.cpp
     src/usd_level_loader.cpp
     src/web_overlay.cpp)
+set_source_files_properties(src/usd_level_loader.cpp PROPERTIES SKIP_LINTING ON)
 target_include_directories(machina_engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_features(machina_engine PUBLIC cxx_std_23)
 target_compile_definitions(machina_engine PUBLIC
@@ -144,7 +148,8 @@ target_link_libraries(solaris PRIVATE machina_engine nlohmann_json::nlohmann_jso
 # clang-format
 find_program(CLANG_FORMAT_EXE
     NAMES clang-format clang-format.exe
-    HINTS "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/Llvm/bin")
+    HINTS ${VS_LLVM_DIR}
+    PATH_SUFFIXES bin x64/bin)
 
 file(GLOB_RECURSE FORMAT_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_SOURCE_DIR}/include/*.hpp"
