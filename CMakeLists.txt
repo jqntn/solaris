@@ -120,7 +120,9 @@ set(CMAKE_CXX_CLANG_TIDY
 # Engine and executable
 add_library(machina_engine STATIC
     src/level_instantiator.cpp
+    src/material_translation.cpp
     src/materialx_shader_generator.cpp
+    src/mesh_assembly.cpp
     src/path_helpers.cpp
     src/renderer.cpp
     src/scene.cpp
