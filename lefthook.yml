@@ -1,0 +1,22 @@
+min_version: 2.1.12
+
+pre-commit:
+  parallel: false
+  jobs:
+    - name: biome
+      glob: "*.{js,mjs,cjs,jsx,ts,tsx,json,jsonc,css,html}"
+      run: npx biome check --write --error-on-warnings --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+    - name: typecheck
+      glob: "*.{js,json}"
+      run: npx tsc -p jsconfig.json
+
+commit-msg:
+  jobs:
+    - name: conventional
+      run: >-
+        head -n 1 "{1}" | grep -qE '^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9._/-]+\))?!?: [a-z][^A-Z]*[^.]$'
+    - name: subject-length
+      run: awk 'NR == 1 { exit length($0) > 72 }' "{1}"
+    - name: subject-only
+      run: awk '/^# -+ >8 -+$/ { exit } /^#/ || /^[[:space:]]*$/ { next } { n++ } END { exit n != 1 }' "{1}"

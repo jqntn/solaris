@@ -1,0 +1,24 @@
+{
+  "name": "solaris",
+  "version": "1.0.0",
+  "private": true,
+  "description": "solaris client",
+  "license": "MIT",
+  "author": "Julien QUENTIN",
+  "type": "module",
+  "scripts": {
+    "ci": "biome ci --error-on-warnings && npm run typecheck && npm test",
+    "format": "biome check --write --error-on-warnings",
+    "prepare": "lefthook install",
+    "start": "npm run format && npm run typecheck && serve",
+    "test": "node --test",
+    "typecheck": "tsc -p jsconfig.json"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.12",
+    "babylonjs": "^9.25.0",
+    "lefthook": "^2.1.12",
+    "serve": "^14.2.4",
+    "typescript": "^7.0.2"
+  }
+}
